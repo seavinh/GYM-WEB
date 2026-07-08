@@ -1,0 +1,150 @@
+<!-- Page Header -->
+<div class="page-topbar">
+  <div class="greeting">
+    <h3>{{ isMember() ? ('attendance.my_title' | translate) : ('attendance.title' | translate) }}</h3>
+    <p>{{ isMember() ? ('attendance.my_subtitle' | translate) : ('attendance.subtitle' | translate) }}</p>
+  </div>
+</div>
+
+<!-- Stats Row - Admin/Receptionist only -->
+@if (!isMember()) {
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="stat-card">
+        <div class="stat-icon green"><i class="bi bi-box-arrow-in-right"></i></div>
+        <div class="stat-label">{{ 'attendance.today_checkins' | translate }}</div>
+        <div class="stat-value">{{ todayReport?.total_check_ins || 0 }}</div>
+        <div class="stat-change positive"><i class="bi bi-arrow-up"></i> {{ 'attendance.live_count' | translate }}</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
+        <div class="stat-label">{{ 'attendance.currently_in_gym' | translate }}</div>
+        <div class="stat-value">{{ todayReport?.currently_in_gym || 0 }}</div>
+        <div class="stat-change neutral">{{ 'attendance.active_sessions' | translate }}</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <div class="stat-icon orange"><i class="bi bi-box-arrow-right"></i></div>
+        <div class="stat-label">{{ 'attendance.checked_out' | translate }}</div>
+        <div class="stat-value">{{ todayReport?.checked_out || 0 }}</div>
+        <div class="stat-change neutral">{{ 'attendance.completed_today' | translate }}</div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Check-in Section -->
+<div class="section-card mb-4">
+  <div class="section-header">
+    <h5><i class="bi bi-qr-code-scan" style="margin-right: 8px; color: var(--accent-green);"></i>{{ 'attendance.quick_checkin' | translate }}</h5>
+  </div>
+
+  @if (isMember()) {
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <button class="btn-primary" (click)="checkIn()">
+        <i class="bi bi-box-arrow-in-right"></i> {{ 'attendance.check_in' | translate }}
+      </button>
+      <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ 'attendance.checkin_as_member' | translate }}</span>
+    </div>
+  } @else {
+    <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 160px; max-width: 280px;">
+        <label class="form-label" style="display: block; margin-bottom: 6px;">{{ 'attendance.member_id' | translate }}</label>
+        <input
+          type="number"
+          class="form-control"
+          [placeholder]="'attendance.enter_member_id' | translate"
+          [(ngModel)]="memberId"
+          (keyup.enter)="checkIn()"
+          id="member-checkin-id"
+        />
+      </div>
+      <button class="btn-primary" (click)="checkIn()" [disabled]="!memberId">
+        <i class="bi bi-box-arrow-in-right"></i> {{ 'attendance.check_in' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (error) {
+    <div class="alert-error" style="margin-top: 12px;">
+      <i class="bi bi-exclamation-circle-fill"></i> {{ error }}
+    </div>
+  }
+</div>
+
+<!-- Attendance Records -->
+<div class="section-card">
+  <div class="section-header">
+    <h5>{{ isMember() ? ('attendance.my_records' | translate) : ('attendance.records' | translate) }}</h5>
+    <button class="btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;" (click)="isMember() ? loadMyAttendance() : loadAttendance()">
+      <i class="bi bi-arrow-clockwise"></i> {{ 'attendance.refresh' | translate }}
+    </button>
+  </div>
+
+  @if (loading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <span>{{ 'attendance.loading_records' | translate }}</span>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            @if (!isMember()) {
+              <th>{{ 'attendance.member' | translate }}</th>
+            }
+            <th>{{ 'attendance.check_in' | translate }}</th>
+            <th>{{ 'attendance.check_out' | translate }}</th>
+            <th>{{ 'attendance.status' | translate }}</th>
+            <th>{{ 'attendance.action' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of attendanceList; track item.attendance_id) {
+            <tr>
+              @if (!isMember()) {
+                <td>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 30px; height: 30px; border-radius: 8px; background: var(--bg-input); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: var(--accent-green);">
+                      {{ (item.member?.full_name || 'NA').substring(0, 2).toUpperCase() }}
+                    </div>
+                    <span>{{ item.member?.full_name || 'N/A' }}</span>
+                  </div>
+                </td>
+              }
+              <td>{{ item.check_in | date:'MMM d, h:mm a' }}</td>
+              <td>{{ item.check_out ? (item.check_out | date:'MMM d, h:mm a') : '—' }}</td>
+              <td>
+                @if (!item.check_out) {
+                  <span class="badge badge-green"><i class="bi bi-circle-fill" style="font-size: 0.5rem; margin-right: 4px;"></i>{{ 'attendance.active' | translate }}</span>
+                } @else {
+                  <span class="badge badge-gray">{{ 'attendance.completed' | translate }}</span>
+                }
+              </td>
+              <td>
+                @if (!item.check_out) {
+                  <button class="btn-danger" style="padding: 5px 12px;" (click)="checkOut(item.member_id)">
+                    <i class="bi bi-box-arrow-right"></i> {{ 'attendance.check_out' | translate }}
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="isMember() ? 4 : 5">
+                <div class="empty-state">
+                  <i class="bi bi-calendar-check"></i>
+                  <p>{{ 'attendance.no_records' | translate }}</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

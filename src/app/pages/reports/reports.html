@@ -1,0 +1,229 @@
+<!-- Page Header -->
+<div class="page-topbar">
+  <div class="greeting">
+    <h3>{{ 'reports.title' | translate }}</h3>
+    <p>Gym analytics, insights and performance overview</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn-secondary" (click)="loadReports()" style="padding: 8px 16px;">
+      <i class="bi bi-arrow-clockwise"></i> {{ 'attendance.refresh' | translate }}
+    </button>
+  </div>
+</div>
+
+<!-- Date Range Filter -->
+<div class="section-card mb-4">
+  <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+    <div>
+      <label class="form-label" style="display: block; margin-bottom: 6px;">From</label>
+      <input type="date" class="form-control" [(ngModel)]="dateFrom" style="min-width: 160px;" />
+    </div>
+    <div>
+      <label class="form-label" style="display: block; margin-bottom: 6px;">To</label>
+      <input type="date" class="form-control" [(ngModel)]="dateTo" style="min-width: 160px;" />
+    </div>
+    <button class="btn-primary" (click)="loadReports()">
+      <i class="bi bi-filter"></i> Filter
+    </button>
+  </div>
+</div>
+
+@if (loading) {
+  <div class="loading-state"><div class="spinner"></div><span>Loading reports...</span></div>
+} @else if (error) {
+  <div class="section-card" style="text-align: center; padding: 48px;">
+    <i class="bi bi-exclamation-triangle" style="font-size: 3rem; color: var(--accent-orange); display: block; margin-bottom: 16px;"></i>
+    <h5 style="color: var(--text-primary); margin-bottom: 8px;">Connection Error</h5>
+    <p style="color: var(--text-secondary); margin-bottom: 20px;">{{ error }}</p>
+    <button class="btn-primary" (click)="loadReports()"><i class="bi bi-arrow-clockwise"></i> Retry</button>
+  </div>
+} @else {
+  <!-- Overview Stats -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon green"><i class="bi bi-people-fill"></i></div>
+        <div class="stat-label">Total Members</div>
+        <div class="stat-value">{{ dashboardData?.total_members || 0 }}</div>
+        <div class="stat-change positive">All registered</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon blue"><i class="bi bi-person-check-fill"></i></div>
+        <div class="stat-label">Active Members</div>
+        <div class="stat-value">{{ dashboardData?.active_members || 0 }}</div>
+        <div class="stat-change positive">With membership</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon orange"><i class="bi bi-currency-dollar"></i></div>
+        <div class="stat-label">Monthly Revenue</div>
+        <div class="stat-value">${{ dashboardData?.monthly_revenue || 0 | number:'1.0-0' }}</div>
+        <div class="stat-change positive">This month</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon purple"><i class="bi bi-calendar-check-fill"></i></div>
+        <div class="stat-label">Daily Check-ins</div>
+        <div class="stat-value">{{ dashboardData?.daily_check_ins || 0 }}</div>
+        <div class="stat-change neutral">Today</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="row g-4 mb-4">
+    <!-- Revenue Donut Chart -->
+    <div class="col-md-6">
+      <div class="section-card" style="min-height: 300px;">
+        <div class="section-header">
+          <h5><i class="bi bi-bar-chart-line" style="margin-right: 8px; color: var(--accent-green);"></i>Revenue Overview</h5>
+          @if (revenueData) {
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Total: <strong style="color: var(--accent-green);">${{ revenueData.total_revenue | number:'1.0-0' }}</strong></span>
+          }
+        </div>
+        @if (revenuePieSlices.length > 0) {
+          <div style="display: flex; align-items: center; gap: 24px; padding: 16px 0; flex-wrap: wrap; justify-content: center;">
+            <div style="position: relative; width: 150px; height: 150px; flex-shrink: 0;">
+              <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                @for (slice of revenuePieSlices; track slice.label; let i = $index) {
+                  <circle
+                    cx="50" cy="50" r="35" fill="none"
+                    [attr.stroke]="slice.color"
+                    stroke-width="12"
+                    [attr.stroke-dasharray]="(slice.percentage * 2.1991) + ' ' + (219.91 - slice.percentage * 2.1991)"
+                    [attr.stroke-dashoffset]="-($any(revenuePieSlices).slice(0, i).reduce((acc, s) => acc + s.percentage * 2.1991, 0))"
+                    opacity="0.85"
+                  />
+                }
+              </svg>
+              <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">${{ revenueData.total_revenue | number:'1.0-0' }}</div>
+                <div style="font-size: 0.65rem; color: var(--text-muted);">Total</div>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 120px;">
+              @for (slice of revenuePieSlices; track slice.label) {
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem;">
+                  <span style="width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;" [style.background]="slice.color"></span>
+                  <span style="color: var(--text-secondary); flex: 1;">{{ slice.label }}</span>
+                  <span style="color: var(--text-primary); font-weight: 600;">${{ slice.value | number:'1.0-0' }}</span>
+                  <span style="color: var(--text-muted); font-size: 0.65rem;">({{ slice.percentage | number:'1.0-0' }}%)</span>
+                </div>
+              }
+            </div>
+          </div>
+        } @else {
+          <div style="text-align: center; padding: 40px 0;">
+            <i class="bi bi-bar-chart-line" style="font-size: 3.5rem; color: var(--accent-green); opacity: 0.3; display: block; margin-bottom: 12px;"></i>
+            <p style="color: var(--text-muted); font-size: 0.875rem;">No revenue data for this period</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Attendance Donut Chart -->
+    <div class="col-md-6">
+      <div class="section-card" style="min-height: 300px;">
+        <div class="section-header">
+          <h5><i class="bi bi-graph-up" style="margin-right: 8px; color: var(--accent-blue);"></i>Attendance Trends</h5>
+          @if (attendanceData) {
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Unique: <strong style="color: var(--accent-blue);">{{ attendanceData.unique_members || 0 }}</strong></span>
+          }
+        </div>
+        @if (attendancePieSlices.length > 0) {
+          <div style="display: flex; align-items: center; gap: 24px; padding: 16px 0; flex-wrap: wrap; justify-content: center;">
+            <div style="position: relative; width: 150px; height: 150px; flex-shrink: 0;">
+              <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                @for (slice of attendancePieSlices; track slice.label; let i = $index) {
+                  <circle
+                    cx="50" cy="50" r="35" fill="none"
+                    [attr.stroke]="slice.color"
+                    stroke-width="12"
+                    [attr.stroke-dasharray]="(slice.percentage * 2.1991) + ' ' + (219.91 - slice.percentage * 2.1991)"
+                    [attr.stroke-dashoffset]="-($any(attendancePieSlices).slice(0, i).reduce((acc, s) => acc + s.percentage * 2.1991, 0))"
+                    opacity="0.85"
+                  />
+                }
+              </svg>
+              <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">{{ attendancePieTotal }}</div>
+                <div style="font-size: 0.65rem; color: var(--text-muted);">Check-ins</div>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 120px;">
+              @for (slice of attendancePieSlices; track slice.label) {
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem;">
+                  <span style="width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;" [style.background]="slice.color"></span>
+                  <span style="color: var(--text-secondary); flex: 1;">{{ slice.label }}</span>
+                  <span style="color: var(--text-primary); font-weight: 600;">{{ slice.value }}</span>
+                  <span style="color: var(--text-muted); font-size: 0.65rem;">({{ slice.percentage | number:'1.0-0' }}%)</span>
+                </div>
+              }
+            </div>
+          </div>
+        } @else {
+          <div style="text-align: center; padding: 40px 0;">
+            <i class="bi bi-graph-up" style="font-size: 3.5rem; color: var(--accent-blue); opacity: 0.3; display: block; margin-bottom: 12px;"></i>
+            <p style="color: var(--text-muted); font-size: 0.875rem;">No attendance data for this period</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Members Breakdown -->
+  @if (activeMembersData) {
+    <div class="section-card mb-4">
+      <div class="section-header">
+        <h5><i class="bi bi-person-check" style="margin-right: 8px; color: var(--accent-purple);"></i>Active Members Breakdown</h5>
+      </div>
+      <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div style="background: var(--bg-input); border-radius: 12px; padding: 14px 20px; flex: 1; min-width: 140px; text-align: center;">
+          <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary);">{{ activeMembersData.count }}</div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; text-transform: capitalize;">Count</div>
+        </div>
+        <div style="background: var(--bg-input); border-radius: 12px; padding: 14px 20px; flex: 3; min-width: 300px;">
+          <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Members</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            @for (member of activeMembersData.members; track member.member_id) {
+              <span style="background: var(--accent-purple-bg, rgba(124,58,237,0.15)); color: var(--accent-purple); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 500;">{{ member.full_name }}</span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Recent Payments -->
+  @if (dashboardData?.recent_payments?.length) {
+    <div class="section-card">
+      <div class="section-header">
+        <h5><i class="bi bi-clock-history" style="margin-right: 8px; color: var(--accent-orange);"></i>Recent Payments</h5>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Amount</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of dashboardData!.recent_payments; track p.payment_id) {
+              <tr>
+                <td>{{ p.member?.full_name || 'N/A' }}</td>
+                <td style="color: var(--accent-green); font-weight: 700;">${{ p.amount }}</td>
+                <td>{{ p.payment_date | date:'MMM d, y' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+}

@@ -1,0 +1,391 @@
+<!-- Top Bar -->
+<div class="page-topbar">
+  <div class="greeting">
+    <h3>{{ getGreeting() }}, {{ username }}!</h3>
+    @if (isAdmin()) {
+      <p>Here's your gym overview for today</p>
+    } @else if (isReceptionist()) {
+      <p>Here's what's happening at the gym</p>
+    } @else {
+      <p>Welcome back! Keep up your fitness journey</p>
+    }
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input type="text" placeholder="Search members, reports..." />
+    </div>
+    <div class="user-profile">
+      <div class="avatar">
+        {{ userInitials }}
+        <span class="notif-dot"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+@if (loading) {
+  <div class="loading-state" style="min-height: 300px;">
+    <div class="spinner"></div>
+    <span>Loading dashboard...</span>
+  </div>
+} @else if (error) {
+  <div class="section-card" style="text-align: center; padding: 48px;">
+    <i class="bi bi-wifi-off" style="font-size: 3rem; color: var(--accent-orange); display: block; margin-bottom: 16px;"></i>
+    <h5 style="color: var(--text-primary); margin-bottom: 8px;">Connection Error</h5>
+    <p style="color: var(--text-secondary); margin-bottom: 20px;">{{ error }}</p>
+    <button class="btn-primary" (click)="loadDashboard()">
+      <i class="bi bi-arrow-clockwise"></i> Retry
+    </button>
+  </div>
+} @else {
+
+  <!-- ========== ADMIN DASHBOARD ========== -->
+  @if (isAdmin() || isReceptionist()) {
+    <!-- Stats Row -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card" style="cursor: pointer;" (click)="navigateTo('/members')">
+          <div class="stat-icon green"><i class="bi bi-people-fill"></i></div>
+          <div class="stat-label">Total Members</div>
+          <div class="stat-value">{{ dashboardData?.total_members || 0 }}</div>
+          <div class="stat-change positive"><i class="bi bi-arrow-up-right"></i> Registered members</div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card" style="cursor: pointer;" (click)="navigateTo('/members')">
+          <div class="stat-icon orange"><i class="bi bi-person-check-fill"></i></div>
+          <div class="stat-label">Active Members</div>
+          <div class="stat-value">{{ dashboardData?.active_members || 0 }}</div>
+          <div class="stat-change positive"><i class="bi bi-arrow-up-right"></i> With membership</div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card" style="cursor: pointer;" (click)="navigateTo('/attendance')">
+          <div class="stat-icon blue"><i class="bi bi-calendar-check-fill"></i></div>
+          <div class="stat-label">Daily Check-ins</div>
+          <div class="stat-value">{{ dashboardData?.daily_check_ins || 0 }}</div>
+          <div class="stat-change positive"><i class="bi bi-arrow-up-right"></i> Today's visits</div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card" style="cursor: pointer;" (click)="navigateTo('/payments')">
+          <div class="stat-icon purple"><i class="bi bi-currency-dollar"></i></div>
+          <div class="stat-label">Monthly Revenue</div>
+          <div class="stat-value">${{ dashboardData?.monthly_revenue || 0 | number:'1.0-0' }}</div>
+          <div class="stat-change positive"><i class="bi bi-arrow-up-right"></i> This month</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row g-4 mb-4">
+      <!-- Today's Workout -->
+      <div class="col-lg-5">
+        <div class="workout-card" style="height: 100%;">
+          <div class="workout-image" style="background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&h=400&fit=crop');"></div>
+          <div class="workout-content">
+            <span class="workout-tag">Today's Workout</span>
+            <h4 class="workout-title">Full Body Strength</h4>
+            <p class="workout-desc">Build strength and improve overall endurance with compound movements.</p>
+            <div class="workout-meta">
+              <span><i class="bi bi-clock"></i> 45 min</span>
+              <span><i class="bi bi-fire"></i> 480 kcal</span>
+              <span><i class="bi bi-speedometer2"></i> Intermediate</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <button class="btn-start">Start Workout</button>
+              <button class="btn-play"><i class="bi bi-play-fill"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly Progress -->
+      <div class="col-lg-3">
+        <div class="section-card" style="height: 100%;">
+          <div class="section-header">
+            <h5><i class="bi bi-lightning-charge-fill" style="margin-right: 8px; color: var(--accent-green);"></i>Weekly Progress</h5>
+            <a class="view-all">View All</a>
+          </div>
+          <div class="progress-chart">
+            @for (bar of weeklyProgress; track bar.day) {
+              <div class="bar-group">
+                <div class="bar" [style.height]="getBarHeight(bar.value)"></div>
+                <span class="bar-label">{{ bar.day }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Nutrition Summary -->
+      <div class="col-lg-4">
+        <div class="section-card" style="height: 100%;">
+          <div class="section-header">
+            <h5>Nutrition Summary</h5>
+            <a class="view-all">Today</a>
+          </div>
+          <div class="nutrition-donut">
+            <svg width="130" height="130" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="52" fill="none" stroke="var(--bg-input)" stroke-width="11"/>
+              <circle cx="60" cy="60" r="52" fill="none" stroke="#4ade80" stroke-width="11"
+                [attr.stroke-dasharray]="getDonutDash(nutrition.carbs.pct)"
+                stroke-linecap="round"/>
+              <circle cx="60" cy="60" r="52" fill="none" stroke="#fb923c" stroke-width="11"
+                [attr.stroke-dasharray]="getDonutDash(nutrition.protein.pct)"
+                [attr.stroke-dashoffset]="-(nutrition.carbs.pct / 100) * 326.726"
+                stroke-linecap="round"/>
+              <circle cx="60" cy="60" r="52" fill="none" stroke="#c084fc" stroke-width="11"
+                [attr.stroke-dasharray]="getDonutDash(nutrition.fats.pct)"
+                [attr.stroke-dashoffset]="-((nutrition.carbs.pct + nutrition.protein.pct) / 100) * 326.726"
+                stroke-linecap="round"/>
+            </svg>
+            <div class="donut-center">
+              <div class="value">{{ nutrition.total }}</div>
+              <div class="label">/ {{ nutrition.target }} kcal</div>
+            </div>
+          </div>
+          <div class="nutrition-legend">
+            <div class="legend-item">
+              <div class="legend-left">
+                <span class="legend-dot" style="background: #4ade80;"></span>
+                <span class="legend-name">Carbs</span>
+              </div>
+              <div class="legend-right">
+                <span class="legend-pct">{{ nutrition.carbs.pct }}%</span>
+                <span class="legend-kcal">{{ nutrition.carbs.kcal }} kcal</span>
+              </div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-left">
+                <span class="legend-dot" style="background: #fb923c;"></span>
+                <span class="legend-name">Protein</span>
+              </div>
+              <div class="legend-right">
+                <span class="legend-pct">{{ nutrition.protein.pct }}%</span>
+                <span class="legend-kcal">{{ nutrition.protein.kcal }} kcal</span>
+              </div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-left">
+                <span class="legend-dot" style="background: #c084fc;"></span>
+                <span class="legend-name">Fats</span>
+              </div>
+              <div class="legend-right">
+                <span class="legend-pct">{{ nutrition.fats.pct }}%</span>
+                <span class="legend-kcal">{{ nutrition.fats.kcal }} kcal</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Row -->
+    <div class="row g-4">
+      <!-- Challenges -->
+      <div class="col-lg-4">
+        <div class="section-card" style="height: 100%;">
+          <div class="section-header">
+            <h5>Challenges</h5>
+            <a class="view-all">View All</a>
+          </div>
+          @for (item of challenges; track item.name) {
+            <div class="challenge-item">
+              <div class="challenge-icon" [ngClass]="item.color">
+                <i [ngClass]="['bi', item.icon]"></i>
+              </div>
+              <div class="challenge-info">
+                <h6>{{ item.name }}</h6>
+                <small>{{ item.progress }} / {{ item.total }}
+                  {{ item.name.includes('Calories') ? 'kcal' : 'days' }}
+                </small>
+              </div>
+              <div class="challenge-progress">
+                <div class="prog-bar">
+                  <div class="fill" [style.width]="item.pct + '%'"></div>
+                </div>
+                <span class="challenge-pct">{{ item.pct }}%</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Recent Payments (if available) -->
+      @if (dashboardData?.recent_payments?.length) {
+        <div class="col-lg-4">
+          <div class="section-card" style="height: 100%;">
+            <div class="section-header">
+              <h5>Recent Payments</h5>
+              <a class="view-all" [routerLink]="'/payments'">View All</a>
+            </div>
+            @for (p of dashboardData!.recent_payments.slice(0, 5); track p.payment_id) {
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                <div>
+                  <div style="font-size: 0.875rem; font-weight: 600; color: var(--text-primary);">{{ p.member?.full_name || 'N/A' }}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">{{ p.payment_date | date:'MMM d' }}</div>
+                </div>
+                <span style="color: var(--accent-green); font-weight: 700;">${{ p.amount }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Popular Workouts -->
+      <div [class]="dashboardData?.recent_payments?.length ? 'col-lg-4' : 'col-lg-8'">
+        <div class="section-card">
+          <div class="section-header">
+            <h5>Popular Workouts</h5>
+            <a class="view-all">Explore</a>
+          </div>
+          <div class="row g-3">
+            @for (workout of popularWorkouts.slice(0, dashboardData?.recent_payments?.length ? 2 : 4); track workout.name) {
+              <div [class]="dashboardData?.recent_payments?.length ? 'col-md-6' : 'col-lg-3 col-md-6'">
+                <div class="workout-grid-card">
+                  <div class="thumb" [style.background-image]="'url(' + workout.image + ')'">
+                    <div class="play-btn"><i class="bi bi-play-fill"></i></div>
+                  </div>
+                  <div class="card-body">
+                    <h6>{{ workout.name }}</h6>
+                    <div class="meta">
+                      <span><i class="bi bi-clock"></i> {{ workout.time }} min</span>
+                      <span><i class="bi bi-fire"></i> {{ workout.kcal }} kcal</span>
+                    </div>
+                    <span class="difficulty" [ngClass]="workout.level">{{ workout.level }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ========== MEMBER DASHBOARD ========== -->
+  @if (isMember()) {
+    <!-- Quick Actions -->
+    <div class="section-card mb-4">
+      <div class="section-header">
+        <h5>Quick Actions</h5>
+      </div>
+      <div class="quick-links-grid">
+        @for (link of quickLinks; track link.route) {
+          <div class="quick-link-card" (click)="navigateTo(link.route)">
+            <div class="quick-link-icon" [ngClass]="link.color">
+              <i class="bi" [ngClass]="link.icon"></i>
+            </div>
+            <span class="quick-link-label">{{ link.label }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <!-- Today's Workout -->
+      <div class="col-lg-6">
+        <div class="workout-card" style="height: 100%;">
+          <div class="workout-image" style="background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&h=400&fit=crop');"></div>
+          <div class="workout-content">
+            <span class="workout-tag">Today's Workout</span>
+            <h4 class="workout-title">Full Body Strength</h4>
+            <p class="workout-desc">Build strength and improve overall endurance with compound movements.</p>
+            <div class="workout-meta">
+              <span><i class="bi bi-clock"></i> 45 min</span>
+              <span><i class="bi bi-fire"></i> 480 kcal</span>
+              <span><i class="bi bi-speedometer2"></i> Intermediate</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <button class="btn-start">Start Workout</button>
+              <button class="btn-play"><i class="bi bi-play-fill"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Challenges -->
+      <div class="col-lg-6">
+        <div class="section-card" style="height: 100%;">
+          <div class="section-header">
+            <h5>My Challenges</h5>
+            <a class="view-all">View All</a>
+          </div>
+          @for (item of challenges; track item.name) {
+            <div class="challenge-item">
+              <div class="challenge-icon" [ngClass]="item.color">
+                <i [ngClass]="['bi', item.icon]"></i>
+              </div>
+              <div class="challenge-info">
+                <h6>{{ item.name }}</h6>
+                <small>{{ item.progress }} / {{ item.total }}
+                  {{ item.name.includes('Calories') ? 'kcal' : 'days' }}
+                </small>
+              </div>
+              <div class="challenge-progress">
+                <div class="prog-bar">
+                  <div class="fill" [style.width]="item.pct + '%'"></div>
+                </div>
+                <span class="challenge-pct">{{ item.pct }}%</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Weekly Progress -->
+      <div class="col-lg-6">
+        <div class="section-card" style="height: 100%;">
+          <div class="section-header">
+            <h5><i class="bi bi-lightning-charge-fill" style="margin-right: 8px; color: var(--accent-green);"></i>Weekly Progress</h5>
+            <a class="view-all">View All</a>
+          </div>
+          <div class="progress-chart">
+            @for (bar of weeklyProgress; track bar.day) {
+              <div class="bar-group">
+                <div class="bar" [style.height]="getBarHeight(bar.value)"></div>
+                <span class="bar-label">{{ bar.day }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Popular Workouts -->
+      <div class="col-lg-6">
+        <div class="section-card">
+          <div class="section-header">
+            <h5>Workouts For You</h5>
+            <a class="view-all">Explore</a>
+          </div>
+          <div class="row g-3">
+            @for (workout of popularWorkouts.slice(0, 2); track workout.name) {
+              <div class="col-md-6">
+                <div class="workout-grid-card">
+                  <div class="thumb" [style.background-image]="'url(' + workout.image + ')'">
+                    <div class="play-btn"><i class="bi bi-play-fill"></i></div>
+                  </div>
+                  <div class="card-body">
+                    <h6>{{ workout.name }}</h6>
+                    <div class="meta">
+                      <span><i class="bi bi-clock"></i> {{ workout.time }} min</span>
+                      <span><i class="bi bi-fire"></i> {{ workout.kcal }} kcal</span>
+                    </div>
+                    <span class="difficulty" [ngClass]="workout.level">{{ workout.level }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+} <!-- end @else -->

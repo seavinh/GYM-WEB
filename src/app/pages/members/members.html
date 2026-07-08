@@ -1,0 +1,272 @@
+<!-- Page Header -->
+<div class="page-topbar">
+  <div class="greeting">
+    <h3>Members</h3>
+    <p>Manage your gym's {{ totalMembers }} registered members</p>
+  </div>
+  <div class="page-actions">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input
+        type="text"
+        placeholder="Search members..."
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="onSearch()"
+      />
+    </div>
+    <button class="btn-primary" id="add-member-btn" (click)="openAddModal()">
+      <i class="bi bi-plus-lg"></i> Add Member
+    </button>
+  </div>
+</div>
+
+<!-- Error -->
+@if (error) {
+  <div class="alert-error">
+    <i class="bi bi-exclamation-circle-fill"></i> {{ error }}
+  </div>
+}
+
+<!-- Loading -->
+@if (loading) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <span>Loading members...</span>
+  </div>
+} @else {
+  <!-- Members Table -->
+  <div class="section-card">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Gender</th>
+            <th>Join Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (member of members; track member.member_id) {
+            <tr>
+              <td>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--accent-green), var(--accent-blue)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; color: #000; flex-shrink: 0;">
+                    {{ getInitials(member.full_name) }}
+                  </div>
+                  <span style="color: var(--text-primary); font-weight: 600;">{{ member.full_name }}</span>
+                </div>
+              </td>
+              <td>{{ member.email }}</td>
+              <td>{{ member.phone }}</td>
+              <td>
+                <span class="badge" [ngClass]="getGenderBadge(member.gender)">{{ member.gender }}</span>
+              </td>
+              <td>{{ member.join_date | date:'MMM d, y' }}</td>
+              <td>
+                <div style="display: flex; gap: 6px;">
+                  <button class="btn-icon edit" title="Edit" (click)="openEditModal(member)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn-icon danger" title="Delete" (click)="deleteMember(member.member_id)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <i class="bi bi-people"></i>
+                  <p>No members found</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages > 1) {
+      <div style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px 0 0; border-top: 1px solid var(--border-color); margin-top: 12px;">
+        <button class="btn-icon" [style.opacity]="currentPage === 1 ? '0.4' : '1'" (click)="changePage(currentPage - 1)">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        @for (page of getPages(); track page) {
+          <button class="btn-icon"
+            [style.background]="currentPage === page ? 'var(--accent-green)' : ''"
+            [style.color]="currentPage === page ? '#000' : ''"
+            [style.border-color]="currentPage === page ? 'var(--accent-green)' : ''"
+            [style.font-weight]="currentPage === page ? '700' : ''"
+            (click)="changePage(page)">
+            {{ page }}
+          </button>
+        }
+        <button class="btn-icon" [style.opacity]="currentPage === totalPages ? '0.4' : '1'" (click)="changePage(currentPage + 1)">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+  </div>
+}
+
+<app-confirm-dialog
+  [show]="showConfirm"
+  title="confirm.delete_member"
+  message="common.confirm_delete"
+  (confirmed)="onConfirmDelete()"
+  (cancelled)="onCancelDelete()">
+</app-confirm-dialog>
+  </div>
+}
+
+<!-- Add / Edit Modal -->
+@if (showModal) {
+  <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px);"
+       (click)="closeModal()">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 20px; padding: 32px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;"
+         (click)="$event.stopPropagation()">
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">
+          {{ modalMode === 'add' ? 'Add New Member' : 'Edit Member' }}
+        </h4>
+        <button class="btn-icon" (click)="closeModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      @if (modalError) {
+        <div class="alert-error">
+          <i class="bi bi-exclamation-circle-fill"></i> {{ modalError }}
+        </div>
+      }
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <!-- Full Name -->
+        <div class="auth-form-group" style="grid-column: 1 / -1;">
+          <label>Full Name *</label>
+          <input type="text" class="auth-input" [(ngModel)]="form.full_name" placeholder="John Doe"
+                 [style.border-color]="formErrors['full_name'] ? '#ef4444' : ''" />
+          @if (formErrors['full_name']) {
+            <span class="field-error">{{ formErrors['full_name'] }}</span>
+          }
+        </div>
+
+        <!-- Email -->
+        <div class="auth-form-group">
+          <label>Email *</label>
+          <input type="email" class="auth-input" [(ngModel)]="form.email" placeholder="john@email.com"
+                 [style.border-color]="formErrors['email'] ? '#ef4444' : ''" />
+          @if (formErrors['email']) {
+            <span class="field-error">{{ formErrors['email'] }}</span>
+          }
+        </div>
+
+        <!-- Phone -->
+        <div class="auth-form-group">
+          <label>Phone *</label>
+          <input type="text" class="auth-input" [(ngModel)]="form.phone" placeholder="+1 234 567 890"
+                 [style.border-color]="formErrors['phone'] ? '#ef4444' : ''" />
+          @if (formErrors['phone']) {
+            <span class="field-error">{{ formErrors['phone'] }}</span>
+          }
+        </div>
+
+        <!-- Gender -->
+        <div class="auth-form-group">
+          <label>Gender</label>
+          <select class="auth-input" [(ngModel)]="form.gender" style="cursor: pointer;">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <!-- Date of Birth -->
+        <div class="auth-form-group">
+          <label>Date of Birth *</label>
+          <input type="date" class="auth-input" [(ngModel)]="form.dob" style="color-scheme: dark;"
+                 [style.border-color]="formErrors['dob'] ? '#ef4444' : ''" />
+          @if (formErrors['dob']) {
+            <span class="field-error">{{ formErrors['dob'] }}</span>
+          }
+        </div>
+
+        <!-- Join Date -->
+        <div class="auth-form-group">
+          <label>Join Date *</label>
+          <input type="date" class="auth-input" [(ngModel)]="form.join_date" style="color-scheme: dark;"
+                 [style.border-color]="formErrors['join_date'] ? '#ef4444' : ''" />
+          @if (formErrors['join_date']) {
+            <span class="field-error">{{ formErrors['join_date'] }}</span>
+          }
+        </div>
+
+        <!-- Address -->
+        <div class="auth-form-group" style="grid-column: 1 / -1;">
+          <label>Address <span style="color: var(--text-secondary); font-weight: 400;">(optional)</span></label>
+          <input type="text" class="auth-input" [(ngModel)]="form.address" placeholder="123 Main St, City" />
+        </div>
+      </div>
+
+      <!-- Create User Account Toggle (only in add mode) -->
+      @if (modalMode === 'add') {
+        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+          <label class="toggle-label">
+            <input type="checkbox" [(ngModel)]="createUserAccount" class="toggle-checkbox" />
+            <span class="toggle-switch"></span>
+            <span>Create User Account</span>
+          </label>
+
+          @if (createUserAccount) {
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px;">
+              <!-- Username -->
+              <div class="auth-form-group">
+                <label>Username *</label>
+                <input type="text" class="auth-input" [(ngModel)]="username" placeholder="johndoe"
+                       [style.border-color]="formErrors['username'] ? '#ef4444' : ''" />
+                @if (formErrors['username']) {
+                  <span class="field-error">{{ formErrors['username'] }}</span>
+                }
+              </div>
+
+              <!-- Password -->
+              <div class="auth-form-group">
+                <label>Password *</label>
+                <input type="password" class="auth-input" [(ngModel)]="password" placeholder="Min 6 characters"
+                       [style.border-color]="formErrors['password'] ? '#ef4444' : ''" />
+                @if (formErrors['password']) {
+                  <span class="field-error">{{ formErrors['password'] }}</span>
+                }
+              </div>
+
+              <!-- Role -->
+              <div class="auth-form-group" style="grid-column: 1 / -1;">
+                <label>Role</label>
+                <select class="auth-input" [(ngModel)]="role" style="cursor: pointer;">
+                  <option value="member">Member</option>
+                  <option value="receptionist">Receptionist</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <div style="display: flex; gap: 10px; margin-top: 24px;">
+        <button class="btn-secondary" style="flex: 1;" (click)="closeModal()">Cancel</button>
+        <button class="btn-primary" style="flex: 1; justify-content: center;" (click)="saveModal()" [disabled]="modalLoading">
+          @if (modalLoading) {
+            <div class="auth-spinner"></div>
+            Saving...
+          } @else {
+            <i class="bi bi-check-lg"></i>
+            {{ modalMode === 'add' ? 'Add Member' : 'Save Changes' }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

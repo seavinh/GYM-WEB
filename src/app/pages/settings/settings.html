@@ -1,0 +1,291 @@
+<!-- Page Header -->
+<div class="page-topbar">
+  <div class="greeting">
+    <h3>{{ 'settings.title' | translate }}</h3>
+    @if (isAdmin()) {
+      <p>{{ 'settings.subtitle_admin' | translate }}</p>
+    } @else if (isReceptionist()) {
+      <p>{{ 'settings.subtitle_receptionist' | translate }}</p>
+    } @else {
+      <p>{{ 'settings.subtitle_member' | translate }}</p>
+    }
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Left Column -->
+  <div class="col-md-6">
+
+    <!-- Profile Card -->
+    <div class="section-card mb-4">
+      <div class="section-header">
+        <h5><i class="bi bi-person-circle" style="margin-right: 8px; color: var(--accent-green);"></i>{{ 'settings.profile' | translate }}</h5>
+      </div>
+      @if (profileLoading) {
+        <div class="loading-state" style="padding: 20px;">
+          <div class="spinner"></div>
+        </div>
+      } @else if (profile) {
+        <div class="profile-card">
+          <div class="profile-avatar" [ngClass]="getRoleBadge()">
+            {{ getInitials() }}
+          </div>
+          <div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">{{ profile.username }}</div>
+            <div style="margin-top: 4px;">
+              <span class="badge" [ngClass]="getRoleBadge()">{{ userRole }}</span>
+            </div>
+            @if (profile.created_at) {
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">{{ 'settings.member_since' | translate }} {{ profile.created_at | date:'MMMM y' }}</div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Change Password -->
+    <div class="section-card">
+      <div class="section-header">
+        <h5><i class="bi bi-shield-lock" style="margin-right: 8px; color: var(--accent-orange);"></i>{{ 'settings.change_password' | translate }}</h5>
+      </div>
+
+      @if (passwordError) {
+        <div class="alert-error"><i class="bi bi-exclamation-circle-fill"></i> {{ passwordError }}</div>
+      }
+      @if (passwordSuccess) {
+        <div class="alert-success"><i class="bi bi-check-circle-fill"></i> {{ passwordSuccess }}</div>
+      }
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="auth-form-group">
+          <label>{{ 'settings.current_password' | translate }}</label>
+          <div class="auth-input-icon">
+            <i class="bi bi-lock"></i>
+            <input type="password" class="auth-input" [(ngModel)]="passwordForm.current_password" [placeholder]="'settings.current_password' | translate" />
+          </div>
+        </div>
+        <div class="auth-form-group">
+          <label>{{ 'settings.new_password' | translate }}</label>
+          <div class="auth-input-icon">
+            <i class="bi bi-lock-fill"></i>
+            <input type="password" class="auth-input" [(ngModel)]="passwordForm.new_password" placeholder="Min. 6 characters" />
+          </div>
+        </div>
+        <div class="auth-form-group">
+          <label>{{ 'settings.confirm_password' | translate }}</label>
+          <div class="auth-input-icon">
+            <i class="bi bi-shield-check"></i>
+            <input type="password" class="auth-input" [(ngModel)]="passwordForm.confirm_password" [placeholder]="'settings.confirm_password' | translate" />
+          </div>
+        </div>
+        <button class="btn-primary" style="margin-top: 4px;" (click)="changePassword()" [disabled]="passwordLoading">
+          @if (passwordLoading) {
+            <div class="auth-spinner"></div> {{ 'settings.changing' | translate }}
+          } @else {
+            <i class="bi bi-check-lg"></i> {{ 'settings.update_password' | translate }}
+          }
+        </button>
+  </div>
+</div>
+
+<app-confirm-dialog
+  [show]="showPasswordConfirm"
+  title="confirm.change_password"
+  message="confirm.change_password_message"
+  (confirmed)="onConfirmPassword()"
+  (cancelled)="onCancelPassword()">
+</app-confirm-dialog>
+</div>
+
+  <!-- Right Column -->
+  <div class="col-md-6">
+
+    <!-- Admin Only: System Settings -->
+    @if (isAdmin()) {
+      <div class="section-card mb-4">
+        <div class="section-header">
+          <h5><i class="bi bi-gear-wide-connected" style="margin-right: 8px; color: var(--accent-purple);"></i>{{ 'settings.system_settings' | translate }}</h5>
+        </div>
+
+        <a class="settings-link" routerLink="/users">
+          <div class="settings-link-icon badge-red"><i class="bi bi-shield-lock"></i></div>
+          <div class="settings-link-info">
+            <h6>{{ 'settings.user_role_management' | translate }}</h6>
+            <p>{{ 'settings.user_role_desc' | translate }}</p>
+          </div>
+          <i class="bi bi-chevron-right settings-link-arrow"></i>
+        </a>
+
+        <a class="settings-link" routerLink="/members">
+          <div class="settings-link-icon badge-blue"><i class="bi bi-people-fill"></i></div>
+          <div class="settings-link-info">
+            <h6>{{ 'settings.manage_members' | translate }}</h6>
+            <p>{{ 'settings.manage_members_desc' | translate }}</p>
+          </div>
+          <i class="bi bi-chevron-right settings-link-arrow"></i>
+        </a>
+
+        <a class="settings-link" routerLink="/equipment">
+          <div class="settings-link-icon badge-green"><i class="bi bi-tools"></i></div>
+          <div class="settings-link-info">
+            <h6>{{ 'settings.equipment_inventory' | translate }}</h6>
+            <p>{{ 'settings.equipment_desc' | translate }}</p>
+          </div>
+          <i class="bi bi-chevron-right settings-link-arrow"></i>
+        </a>
+
+        <a class="settings-link" routerLink="/reports">
+          <div class="settings-link-icon badge-orange"><i class="bi bi-bar-chart-fill"></i></div>
+          <div class="settings-link-info">
+            <h6>{{ 'settings.reports_analytics' | translate }}</h6>
+            <p>{{ 'settings.reports_desc' | translate }}</p>
+          </div>
+          <i class="bi bi-chevron-right settings-link-arrow"></i>
+        </a>
+      </div>
+    }
+
+    <!-- Receptionist Only: Quick Links -->
+    @if (isReceptionist()) {
+      <div class="section-card mb-4">
+        <div class="section-header">
+          <h5><i class="bi bi-lightning-charge-fill" style="margin-right: 8px; color: var(--accent-orange);"></i>{{ 'settings.quick_links' | translate }}</h5>
+        </div>
+
+        <a class="settings-link" routerLink="/members">
+          <div class="settings-link-icon badge-blue"><i class="bi bi-people-fill"></i></div>
+          <div class="settings-link-info">
+            <h6>{{ 'settings.manage_members' | translate }}</h6>
+            <p>{{ 'settings.manage_members_desc' | translate }}</p>
+          </div>
+          <i class="bi bi-chevron-right settings-link-arrow"></i>
+        </a>
+
+        <a class="settings-link" routerLink="/attendance">
+          <div class="settings-link-icon badge-green"><i class="bi bi-calendar-check-fill"></i></div>
+          <div class="settings-link-info">
+            <h6>{{ 'settings.attendance' | translate }}</h6>
+            <p>{{ 'settings.attendance_desc' | translate }}</p>
+          </div>
+          <i class="bi bi-chevron-right settings-link-arrow"></i>
+        </a>
+
+        <a class="settings-link" routerLink="/payments">
+          <div class="settings-link-icon badge-purple"><i class="bi bi-credit-card-fill"></i></div>
+          <div class="settings-link-info">
+            <h6>{{ 'settings.payments' | translate }}</h6>
+            <p>{{ 'settings.payments_desc' | translate }}</p>
+          </div>
+          <i class="bi bi-chevron-right settings-link-arrow"></i>
+        </a>
+      </div>
+    }
+
+    <!-- Member Only: Quick Links -->
+    @if (isMember()) {
+      <div class="section-card mb-4">
+        <div class="section-header">
+          <h5><i class="bi bi-lightning-charge-fill" style="margin-right: 8px; color: var(--accent-green);"></i>{{ 'settings.quick_links' | translate }}</h5>
+        </div>
+
+        <a class="settings-link" routerLink="/attendance">
+          <div class="settings-link-icon badge-green"><i class="bi bi-calendar-check-fill"></i></div>
+          <div class="settings-link-info">
+            <h6>{{ 'settings.my_attendance' | translate }}</h6>
+            <p>{{ 'settings.my_attendance_desc' | translate }}</p>
+          </div>
+          <i class="bi bi-chevron-right settings-link-arrow"></i>
+        </a>
+
+        <a class="settings-link" routerLink="/">
+          <div class="settings-link-icon badge-orange"><i class="bi bi-fire"></i></div>
+          <div class="settings-link-info">
+            <h6>{{ 'settings.my_workouts' | translate }}</h6>
+            <p>{{ 'settings.my_workouts_desc' | translate }}</p>
+          </div>
+          <i class="bi bi-chevron-right settings-link-arrow"></i>
+        </a>
+      </div>
+    }
+
+    <!-- Preferences -->
+    <div class="section-card mb-4">
+      <div class="section-header">
+        <h5><i class="bi bi-sliders" style="margin-right: 8px; color: var(--accent-blue);"></i>{{ 'settings.preferences' | translate }}</h5>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-info">
+          <h6>{{ 'settings.email_notifications' | translate }}</h6>
+          <p>{{ 'settings.email_notifications_desc' | translate }}</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" [(ngModel)]="notificationsEnabled">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-info">
+          <h6>{{ 'settings.dark_mode' | translate }}</h6>
+          <p>{{ themeService.isDark() ? ('settings.dark_mode_desc_dark' | translate) : ('settings.dark_mode_desc_light' | translate) }}</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" [checked]="themeService.isDark()" (change)="toggleDarkMode()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-info">
+          <h6>{{ 'settings.language' | translate }}</h6>
+          <p>{{ 'settings.language_desc' | translate }}</p>
+        </div>
+        <select class="form-control" style="width: auto; min-width: 120px; padding: 6px 10px; font-size: 0.85rem;"
+                [ngModel]="langService.currentLang()"
+                (ngModelChange)="onLanguageChange($event)">
+          <option value="en">English</option>
+          <option value="km">Khmer</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="section-card mb-4">
+      <div class="section-header">
+        <h5><i class="bi bi-info-circle" style="margin-right: 8px; color: var(--accent-teal);"></i>{{ 'settings.about' | translate }}</h5>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div class="about-row">
+          <span>{{ 'settings.app_name' | translate }}</span>
+          <span style="font-weight: 600;">FitLife GMS</span>
+        </div>
+        <div class="about-row">
+          <span>{{ 'settings.version' | translate }}</span>
+          <span class="badge badge-green">v1.0.0</span>
+        </div>
+        <div class="about-row">
+          <span>{{ 'settings.backend' | translate }}</span>
+          <span>Laravel 11 + Sanctum</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="section-card" style="border-color: rgba(248,113,113,0.2);">
+      <div class="section-header">
+        <h5 style="color: var(--accent-red);"><i class="bi bi-exclamation-triangle" style="margin-right: 8px;"></i>{{ 'settings.danger_zone' | translate }}</h5>
+      </div>
+      <div class="settings-item" style="border: none;">
+        <div class="settings-info">
+          <h6>{{ 'settings.sign_out' | translate }}</h6>
+          <p>{{ 'settings.sign_out_desc' | translate }}</p>
+        </div>
+        <button class="btn-danger" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i> {{ 'settings.sign_out' | translate }}
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

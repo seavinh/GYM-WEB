@@ -1,0 +1,209 @@
+<!-- Page Header -->
+<div class="page-topbar">
+  <div class="greeting">
+    <h3>Users & Roles</h3>
+    <p>Manage user accounts and assign roles</p>
+  </div>
+  <div class="page-actions">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input
+        type="text"
+        placeholder="Search users..."
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="onSearch()"
+      />
+    </div>
+    <select class="filter-select" [(ngModel)]="filterRole" (change)="onFilterRole()">
+      <option value="">All Roles</option>
+      <option value="admin">Admin</option>
+      <option value="receptionist">Receptionist</option>
+      <option value="member">Member</option>
+    </select>
+  </div>
+</div>
+
+<!-- Error -->
+@if (error) {
+  <div class="alert-error">
+    <i class="bi bi-exclamation-circle-fill"></i> {{ error }}
+  </div>
+}
+
+<!-- Stats -->
+@if (!loading) {
+  <div class="stats-row">
+    @for (r of roleOptions; track r.value) {
+      <div class="stat-card">
+        <div class="stat-icon" [ngClass]="r.badge">
+          <i class="bi" [ngClass]="{
+            'bi-shield-lock': r.value === 'admin',
+            'bi-person-workspace': r.value === 'receptionist',
+            'bi-person': r.value === 'member'
+          }"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ roleCounts[r.value] }}</span>
+          <span class="stat-label">{{ r.label }}s</span>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+<!-- Loading -->
+@if (loading) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <span>Loading users...</span>
+  </div>
+} @else {
+  <!-- Users Table -->
+  <div class="section-card">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Member</th>
+            <th>Role</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users; track user.user_id) {
+            <tr>
+              <td>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div class="user-avatar" [ngClass]="getRoleBadge(user.role)">
+                    {{ getInitials(user.username) }}
+                  </div>
+                  <span style="color: var(--text-primary); font-weight: 600;">{{ user.username }}</span>
+                </div>
+              </td>
+              <td>{{ getMemberName(user) }}</td>
+              <td>
+                <span class="badge" [ngClass]="getRoleBadge(user.role)">{{ user.role }}</span>
+              </td>
+              <td>{{ user.created_at | date:'MMM d, y' }}</td>
+              <td>
+                <div style="display: flex; gap: 6px;">
+                  <button class="btn-icon edit" title="Change Role" (click)="openRoleModal(user)">
+                    <i class="bi bi-shield-lock"></i>
+                  </button>
+                  <button class="btn-icon danger" title="Delete User" (click)="deleteUser(user.user_id)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <i class="bi bi-person-x"></i>
+                  <p>No users found</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button class="btn-icon" [style.opacity]="currentPage === 1 ? '0.4' : '1'" (click)="changePage(currentPage - 1)">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        @for (page of getPages(); track page) {
+          <button class="btn-icon"
+            [style.background]="currentPage === page ? 'var(--accent-green)' : ''"
+            [style.color]="currentPage === page ? '#000' : ''"
+            [style.border-color]="currentPage === page ? 'var(--accent-green)' : ''"
+            [style.font-weight]="currentPage === page ? '700' : ''"
+            (click)="changePage(page)">
+            {{ page }}
+          </button>
+        }
+        <button class="btn-icon" [style.opacity]="currentPage === totalPages ? '0.4' : '1'" (click)="changePage(currentPage + 1)">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    }
+  </div>
+}
+
+<!-- Role Change Modal -->
+@if (showModal && selectedUser) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <h4>Change Role</h4>
+        <button class="btn-icon" (click)="closeModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      @if (modalError) {
+        <div class="alert-error">
+          <i class="bi bi-exclamation-circle-fill"></i> {{ modalError }}
+  </div>
+}
+
+<app-confirm-dialog
+  [show]="showConfirm"
+  title="confirm.delete_user"
+  message="common.confirm_delete"
+  (confirmed)="onConfirmDelete()"
+  (cancelled)="onCancelDelete()">
+</app-confirm-dialog>
+
+      <div class="modal-user-info">
+        <div class="user-avatar" [ngClass]="getRoleBadge(selectedUser.role)">
+          {{ getInitials(selectedUser.username) }}
+        </div>
+        <div>
+          <div style="font-weight: 700; color: var(--text-primary);">{{ selectedUser.username }}</div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ getMemberName(selectedUser) }}</div>
+        </div>
+      </div>
+
+      <div class="role-options">
+        @for (r of roleOptions; track r.value) {
+          <label class="role-option" [class.active]="newRole === r.value">
+            <input type="radio" name="role" [value]="r.value" [(ngModel)]="newRole" />
+            <div class="role-option-content">
+              <i class="bi" [ngClass]="{
+                'bi-shield-lock': r.value === 'admin',
+                'bi-person-workspace': r.value === 'receptionist',
+                'bi-person': r.value === 'member'
+              }"></i>
+              <div>
+                <div class="role-option-label">{{ r.label }}</div>
+                <div class="role-option-desc">
+                  @if (r.value === 'admin') { Full access to all features }
+                  @else if (r.value === 'receptionist') { Manage members and attendance }
+                  @else { Basic member access }
+                </div>
+              </div>
+            </div>
+          </label>
+        }
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" style="flex: 1;" (click)="closeModal()">Cancel</button>
+        <button class="btn-primary" style="flex: 1; justify-content: center;" (click)="saveRole()" [disabled]="modalLoading">
+          @if (modalLoading) {
+            <div class="auth-spinner"></div>
+            Saving...
+          } @else {
+            <i class="bi bi-check-lg"></i> Save Role
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,185 @@
+<!-- Page Header -->
+<div class="page-topbar">
+  <div class="greeting">
+    <h3>{{ 'equipment.title' | translate }}</h3>
+    <p>{{ 'equipment.subtitle' | translate }}</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn-primary" id="add-equipment-btn" (click)="openAddModal()">
+      <i class="bi bi-plus-lg"></i> {{ 'equipment.add' | translate }}
+    </button>
+  </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-4 mb-4">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="bi bi-tools"></i></div>
+      <div class="stat-label">{{ 'equipment.total_items' | translate }}</div>
+      <div class="stat-value">{{ equipmentList.length }}</div>
+      <div class="stat-change positive">{{ 'equipment.unique_types' | translate }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="bi bi-box-seam"></i></div>
+      <div class="stat-label">{{ 'equipment.total_quantity' | translate }}</div>
+      <div class="stat-value">{{ getTotalQuantity() }}</div>
+      <div class="stat-change neutral">{{ 'equipment.total_units' | translate }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon orange"><i class="bi bi-exclamation-triangle"></i></div>
+      <div class="stat-label">{{ 'equipment.needs_attention' | translate }}</div>
+      <div class="stat-value">{{ getMaintenanceCount() }}</div>
+      <div class="stat-change" [class]="getMaintenanceCount() > 0 ? 'negative' : 'positive'">
+        {{ getMaintenanceCount() > 0 ? ('equipment.requires_maintenance' | translate) : ('equipment.all_good' | translate) }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Equipment Table -->
+<div class="section-card">
+  <div class="section-header">
+    <h5>{{ 'equipment.inventory' | translate }}</h5>
+    <span style="font-size: 0.8rem; color: var(--text-muted);">{{ equipmentList.length }} {{ 'equipment.items' | translate }}</span>
+  </div>
+
+  @if (error) {
+    <div class="alert-error"><i class="bi bi-exclamation-circle-fill"></i> {{ error }}</div>
+  }
+
+  @if (loading) {
+    <div class="loading-state"><div class="spinner"></div><span>{{ 'common.loading' | translate }}</span></div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'equipment.name' | translate }}</th>
+            <th>{{ 'equipment.type' | translate }}</th>
+            <th>{{ 'equipment.quantity' | translate }}</th>
+            <th>{{ 'equipment.status' | translate }}</th>
+            <th>{{ 'equipment.purchase_date' | translate }}</th>
+            <th>{{ 'equipment.actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of equipmentList; track item.equipment_id) {
+            <tr>
+              <td style="font-weight: 600;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(45,212,191,0.1); display: flex; align-items: center; justify-content: center; color: var(--accent-teal);">
+                    <i class="bi bi-tools" style="font-size: 0.8rem;"></i>
+                  </div>
+                  {{ item.name }}
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-blue">{{ item.type }}</span>
+              </td>
+              <td>
+                <span style="font-weight: 700; color: var(--text-primary);">{{ item.quantity }}</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 4px;">{{ 'common.units' | translate }}</span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="getStatusBadge(item.status)">{{ capitalizeStatus(item.status) }}</span>
+              </td>
+              <td>{{ item.purchase_date | date:'MMM d, y' }}</td>
+              <td>
+                <div style="display: flex; gap: 6px;">
+                  <button class="btn-icon edit" [title]="'common.edit' | translate" (click)="openEditModal(item)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn-icon danger" [title]="'common.delete' | translate" (click)="deleteEquipment(item.equipment_id)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <i class="bi bi-tools"></i>
+                  <p>{{ 'equipment.no_equipment' | translate }}</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- Add / Edit Modal -->
+@if (showModal) {
+  <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px);"
+       (click)="closeModal()">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 20px; padding: 32px; width: 100%; max-width: 480px;"
+         (click)="$event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">
+          {{ modalMode === 'add' ? ('equipment.add' | translate) : ('equipment.save_changes' | translate) }}
+        </h4>
+        <button class="btn-icon" (click)="closeModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      @if (modalError) {
+        <div class="alert-error"><i class="bi bi-exclamation-circle-fill"></i> {{ modalError }}</div>
+      }
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div class="auth-form-group" style="grid-column: 1 / -1;">
+          <label>{{ 'equipment.equipment_name' | translate }} *</label>
+          <input type="text" class="auth-input" [(ngModel)]="form.name" placeholder="e.g. Treadmill Pro 3000" />
+        </div>
+        <div class="auth-form-group">
+          <label>{{ 'equipment.type' | translate }} *</label>
+          <select class="auth-input" [(ngModel)]="form.type" style="cursor: pointer;">
+            <option value="">— {{ 'equipment.select_type' | translate }} —</option>
+            @for (t of typeOptions; track t) {
+              <option [value]="t">{{ t }}</option>
+            }
+          </select>
+        </div>
+        <div class="auth-form-group">
+          <label>{{ 'equipment.quantity' | translate }}</label>
+          <input type="number" class="auth-input" [(ngModel)]="form.quantity" min="1" />
+        </div>
+        <div class="auth-form-group">
+          <label>{{ 'equipment.status' | translate }}</label>
+          <select class="auth-input" [(ngModel)]="form.status" style="cursor: pointer;">
+            @for (s of statusOptions; track s) {
+              <option [value]="s">{{ capitalizeStatus(s) }}</option>
+            }
+          </select>
+        </div>
+        <div class="auth-form-group">
+          <label>{{ 'equipment.purchase_date' | translate }}</label>
+          <input type="date" class="auth-input" [(ngModel)]="form.purchase_date" />
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 24px;">
+        <button class="btn-secondary" style="flex: 1;" (click)="closeModal()">{{ 'common.cancel' | translate }}</button>
+        <button class="btn-primary" style="flex: 1; justify-content: center;" (click)="saveModal()" [disabled]="modalLoading">
+          @if (modalLoading) {
+            <div class="auth-spinner"></div> {{ 'common.loading' | translate }}
+          } @else {
+            <i class="bi bi-check-lg"></i> {{ modalMode === 'add' ? ('equipment.add_item' | translate) : ('equipment.save_changes' | translate) }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [show]="showConfirm"
+  title="confirm.delete_equipment"
+  message="common.confirm_delete"
+  (confirmed)="onConfirmDelete()"
+  (cancelled)="onCancelDelete()">
+</app-confirm-dialog>

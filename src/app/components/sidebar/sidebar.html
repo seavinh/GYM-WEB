@@ -1,0 +1,35 @@
+<aside class="app-sidebar" [class.show]="show">
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <i class="bi bi-lightning-charge-fill" style="color: #000;"></i>
+    </div>
+    <h2>Fit<span>Life</span></h2>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">Main Menu</div>
+    @for (item of navItems; track item.route) {
+      <div class="nav-item">
+        <a class="nav-link"
+           [routerLink]="item.route"
+           routerLinkActive="active"
+           [routerLinkActiveOptions]="{exact: item.route === '/'}">
+          <i class="nav-icon bi" [ngClass]="item.icon"></i>
+          {{ item.labelKey | translate }}
+        </a>
+      </div>
+    }
+  </nav>
+
+  <!-- User Info -->
+  <div class="sidebar-user" (click)="logout()" title="Click to logout">
+    <div class="user-avatar">{{ initials }}</div>
+    <div class="user-info">
+      <h6>{{ username }}</h6>
+      <small>{{ role }}</small>
+    </div>
+    <i class="bi bi-box-arrow-right logout-btn"></i>
+  </div>
+</aside>

@@ -1,0 +1,15 @@
+@if (!isAuthPage) {
+  <button class="sidebar-toggle" (click)="toggleSidebar()" id="sidebar-toggle-btn" aria-label="Toggle Sidebar">
+    <i class="bi bi-list"></i>
+  </button>
+}
+
+<div [class]="isAuthPage ? '' : 'app-layout'">
+  @if (!isAuthPage) {
+    <app-sidebar [show]="sidebarShow"></app-sidebar>
+  }
+
+  <main [class]="isAuthPage ? '' : 'app-main'">
+    <router-outlet></router-outlet>
+  </main>
+</div>

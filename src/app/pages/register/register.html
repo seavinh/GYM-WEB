@@ -1,0 +1,107 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <!-- Logo -->
+    <div class="auth-logo">
+      <div class="logo-icon">
+        <i class="bi bi-lightning-charge-fill" style="color: #000; font-size: 20px;"></i>
+      </div>
+      <h2>Fit<span>Life</span></h2>
+    </div>
+
+    <h1 class="auth-title">Create account</h1>
+    <p class="auth-subtitle">Join the FitLife management system</p>
+
+    <!-- Error Alert -->
+    @if (error) {
+      <div class="alert-error" style="margin-bottom: 20px;">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        {{ error }}
+      </div>
+    }
+
+    <form (ngSubmit)="onSubmit()" id="register-form">
+      <div class="auth-form-group">
+        <label for="reg-username">Username</label>
+        <div class="auth-input-icon">
+          <i class="bi bi-person"></i>
+          <input
+            type="text"
+            class="auth-input"
+            id="reg-username"
+            [(ngModel)]="username"
+            name="username"
+            placeholder="Choose a username"
+            autocomplete="username"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="auth-form-group">
+        <label for="reg-password">Password</label>
+        <div class="auth-input-icon">
+          <i class="bi bi-lock"></i>
+          <input
+            type="password"
+            class="auth-input"
+            id="reg-password"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="At least 6 characters"
+            autocomplete="new-password"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="auth-form-group">
+        <label for="reg-confirm">Confirm Password</label>
+        <div class="auth-input-icon">
+          <i class="bi bi-shield-lock"></i>
+          <input
+            type="password"
+            class="auth-input"
+            id="reg-confirm"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            placeholder="Re-enter your password"
+            autocomplete="new-password"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="auth-form-group">
+        <label for="reg-role">Role</label>
+        <div class="auth-input-icon">
+          <i class="bi bi-person-badge"></i>
+          <select
+            class="auth-input"
+            id="reg-role"
+            [(ngModel)]="role"
+            name="role"
+            style="cursor: pointer;"
+          >
+            <option value="admin">Admin</option>
+            <option value="receptionist">Receptionist</option>
+            <option value="member">Member</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="auth-btn" id="register-submit" [disabled]="loading">
+        @if (loading) {
+          <div class="auth-spinner"></div>
+          Creating account...
+        } @else {
+          <i class="bi bi-person-plus"></i>
+          Create Account
+        }
+      </button>
+    </form>
+
+    <div class="auth-link">
+      Already have an account? <a routerLink="/login">Sign in</a>
+    </div>
+  </div>
+</div>

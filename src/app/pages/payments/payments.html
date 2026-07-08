@@ -1,0 +1,177 @@
+<!-- Page Header -->
+<div class="page-topbar">
+  <div class="greeting">
+    <h3>Payments</h3>
+    <p>Manage member payments and subscriptions</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn-primary" id="add-payment-btn" (click)="openAddModal()">
+      <i class="bi bi-plus-lg"></i> New Payment
+    </button>
+  </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-4 mb-4">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="bi bi-currency-dollar"></i></div>
+      <div class="stat-label">Total Revenue</div>
+      <div class="stat-value">${{ getTotalRevenue() | number:'1.0-0' }}</div>
+      <div class="stat-change positive"><i class="bi bi-arrow-up"></i> All time</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="bi bi-receipt"></i></div>
+      <div class="stat-label">Total Transactions</div>
+      <div class="stat-value">{{ payments.length }}</div>
+      <div class="stat-change neutral">Recorded payments</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon orange"><i class="bi bi-tag"></i></div>
+      <div class="stat-label">Membership Plans</div>
+      <div class="stat-value">{{ memberships.length }}</div>
+      <div class="stat-change neutral">Available plans</div>
+    </div>
+  </div>
+</div>
+
+<!-- Membership Plans -->
+@if (memberships.length > 0) {
+  <div class="section-card mb-4">
+    <div class="section-header">
+      <h5>Membership Plans</h5>
+    </div>
+    <div class="row g-3">
+      @for (m of memberships; track m.membership_id) {
+        <div class="col-lg-3 col-md-6">
+          <div style="background: var(--bg-input); border: 1px solid var(--border-light); border-radius: 14px; padding: 18px; text-align: center; transition: all 0.2s; cursor: pointer;"
+               [style.border-color]="hoveredPlan === m.membership_id ? 'var(--accent-green)' : 'var(--border-light)'"
+               (mouseenter)="hoveredPlan = m.membership_id"
+               (mouseleave)="hoveredPlan = null">
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--accent-green); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">{{ m.membership_name }}</div>
+            <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary); letter-spacing: -1px;">${{ m.price }}</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">{{ m.duration }} month{{ m.duration !== 1 ? 's' : '' }}</div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- Payment History -->
+<div class="section-card">
+  <div class="section-header">
+    <h5>Payment History</h5>
+    <span style="font-size: 0.8rem; color: var(--text-muted);">{{ payments.length }} records</span>
+  </div>
+
+  @if (error) {
+    <div class="alert-error"><i class="bi bi-exclamation-circle-fill"></i> {{ error }}</div>
+  }
+
+  @if (loading) {
+    <div class="loading-state"><div class="spinner"></div><span>Loading payments...</span></div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Membership</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of payments; track p.payment_id) {
+            <tr>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 30px; height: 30px; border-radius: 8px; background: rgba(74,222,128,0.1); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: var(--accent-green);">
+                    {{ (p.member?.full_name || 'NA').substring(0, 2).toUpperCase() }}
+                  </div>
+                  <span>{{ p.member?.full_name || 'N/A' }}</span>
+                </div>
+              </td>
+              <td>
+                @if (p.membership?.membership_name) {
+                  <span class="badge badge-blue">{{ p.membership?.membership_name }}</span>
+                } @else {
+                  <span style="color: var(--text-muted);">—</span>
+                }
+              </td>
+              <td style="color: var(--accent-green); font-weight: 700; font-size: 1rem;">${{ p.amount }}</td>
+              <td>{{ p.payment_date | date:'MMM d, y' }}</td>
+              <td>
+                <button class="btn-icon" title="View Receipt">
+                  <i class="bi bi-receipt"></i>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <i class="bi bi-credit-card"></i>
+                  <p>No payment records found</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- Add Payment Modal -->
+@if (showModal) {
+  <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px);"
+       (click)="closeModal()">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 20px; padding: 32px; width: 100%; max-width: 460px;"
+         (click)="$event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">New Payment</h4>
+        <button class="btn-icon" (click)="closeModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      @if (modalError) {
+        <div class="alert-error"><i class="bi bi-exclamation-circle-fill"></i> {{ modalError }}</div>
+      }
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="auth-form-group">
+          <label>Member ID *</label>
+          <input type="number" class="auth-input" [(ngModel)]="newPayment.member_id" placeholder="Enter member ID" />
+        </div>
+        <div class="auth-form-group">
+          <label>Membership Plan *</label>
+          <select class="auth-input" [(ngModel)]="newPayment.membership_id" style="cursor: pointer;">
+            <option value="">— Select plan —</option>
+            @for (m of memberships; track m.membership_id) {
+              <option [value]="m.membership_id">{{ m.membership_name }} — ${{ m.price }}</option>
+            }
+          </select>
+        </div>
+        <div class="auth-form-group">
+          <label>Amount *</label>
+          <input type="number" class="auth-input" [(ngModel)]="newPayment.amount" placeholder="0.00" />
+        </div>
+        <div class="auth-form-group">
+          <label>Payment Date *</label>
+          <input type="date" class="auth-input" [(ngModel)]="newPayment.payment_date" style="color-scheme: dark;" />
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 24px;">
+        <button class="btn-secondary" style="flex: 1;" (click)="closeModal()">Cancel</button>
+        <button class="btn-primary" style="flex: 1; justify-content: center;" (click)="savePayment()" [disabled]="modalLoading">
+          @if (modalLoading) { <div class="auth-spinner"></div> Saving... }
+          @else { <i class="bi bi-check-lg"></i> Record Payment }
+        </button>
+      </div>
+    </div>
+  </div>
+}
