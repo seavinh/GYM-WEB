@@ -26,7 +26,7 @@ export class Equipment implements OnInit {
   showConfirm = false;
   deleteTargetId: number | null = null;
 
-  statusOptions = ['available', 'maintenance', 'retired'];
+  statusOptions = ['bought', 'maintenance', 'miss', 'broken'];
   typeOptions = ['Cardio', 'Strength', 'Flexibility', 'Free Weights', 'Machines', 'Other'];
 
   constructor(private equipmentService: EquipmentService, private cdr: ChangeDetectorRef) {}
@@ -53,18 +53,20 @@ export class Equipment implements OnInit {
 
   getStatusColor(status: string): string {
     switch (status?.toLowerCase()) {
-      case 'available': return 'var(--accent-green)';
+      case 'bought': return 'var(--accent-green)';
       case 'maintenance': return 'var(--accent-orange)';
-      case 'retired': return 'var(--accent-red)';
+      case 'miss': return '#f59e0b'; // amber/orange-yellow
+      case 'broken': return 'var(--accent-red)';
       default: return 'var(--text-secondary)';
     }
   }
 
   getStatusBadge(status: string): string {
     switch (status?.toLowerCase()) {
-      case 'available': return 'badge-green';
+      case 'bought': return 'badge-green';
       case 'maintenance': return 'badge-orange';
-      case 'retired': return 'badge-red';
+      case 'miss': return 'badge-gray';
+      case 'broken': return 'badge-red';
       default: return 'badge-gray';
     }
   }
@@ -83,7 +85,7 @@ export class Equipment implements OnInit {
 
   openAddModal(): void {
     this.modalMode = 'add';
-    this.form = { status: 'available', quantity: 1 };
+    this.form = { status: 'bought', quantity: 1 };
     this.modalError = '';
     this.showModal = true;
   }

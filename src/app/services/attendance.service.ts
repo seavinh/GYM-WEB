@@ -38,8 +38,8 @@ export class AttendanceService {
       .pipe(catchError(this.handleError));
   }
 
-  checkOut(memberId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/check-out`, { member_id: memberId })
+  checkOut(attendanceId: number, memberId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/check-out`, { attendance_id: attendanceId, member_id: memberId })
       .pipe(catchError(this.handleError));
   }
 
@@ -51,6 +51,8 @@ export class AttendanceService {
   private handleError(error: any) {
     let errorMessage = 'An error occurred';
     if (error.error instanceof ErrorEvent) {
+      errorMessage = error.error.message;
+    } else if (error.error && error.error.message) {
       errorMessage = error.error.message;
     } else if (error.status) {
       switch (error.status) {

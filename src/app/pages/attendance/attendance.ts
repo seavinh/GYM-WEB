@@ -44,8 +44,7 @@ export class Attendance implements OnInit {
   loadMyProfile(): void {
     this.authService.getProfile().subscribe({
       next: (res: any) => {
-        const user = res.user || res;
-        this.myMemberId = user.member?.member_id || null;
+        this.myMemberId = res.member?.member_id || res.user?.member?.member_id || null;
         this.loadMyAttendance();
       },
       error: () => {
@@ -95,6 +94,7 @@ export class Attendance implements OnInit {
   }
 
   checkIn(): void {
+    this.error = '';
     if (this.isMember()) {
       this.attendanceService.myCheckIn().subscribe({
         next: () => {
@@ -116,22 +116,25 @@ export class Attendance implements OnInit {
     }
   }
 
-  checkOut(memberId: number): void {
+  checkOut(attendanceId: number, memberId: number): void {
+    this.error = '';
     if (this.isMember()) {
       this.attendanceService.myCheckOut().subscribe({
         next: () => {
           this.loadMyAttendance();
           this.loadTodayReport();
+          this.cdr.detectChanges();
         },
-        error: (err) => { this.error = err.message; }
+        error: (err) => { this.error = err.message; this.cdr.detectChanges(); }
       });
     } else {
-      this.attendanceService.checkOut(memberId).subscribe({
+      this.attendanceService.checkOut(attendanceId, memberId).subscribe({
         next: () => {
           this.loadAttendance();
           this.loadTodayReport();
+          this.cdr.detectChanges();
         },
-        error: (err) => { this.error = err.message; }
+        error: (err) => { this.error = err.message; this.cdr.detectChanges(); }
       });
     }
   }

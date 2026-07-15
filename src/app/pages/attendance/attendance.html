@@ -127,7 +127,7 @@
               </td>
               <td>
                 @if (!item.check_out) {
-                  <button class="btn-danger" style="padding: 5px 12px;" (click)="checkOut(item.member_id)">
+                  <button class="btn-danger" style="padding: 5px 12px;" (click)="checkOut(item.attendance_id, item.member_id)">
                     <i class="bi bi-box-arrow-right"></i> {{ 'attendance.check_out' | translate }}
                   </button>
                 }

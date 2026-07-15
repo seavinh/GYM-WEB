@@ -75,12 +75,16 @@ export class Payments implements OnInit {
   }
 
   savePayment(): void {
-    if (!this.newPayment.member_id || !this.newPayment.membership_id || !this.newPayment.amount) {
-      this.modalError = 'Member, membership plan and amount are required.';
+    if (!this.newPayment.member_id || !this.newPayment.amount) {
+      this.modalError = 'Member ID and amount are required.';
       return;
     }
     this.modalLoading = true;
-    this.paymentService.createPayment(this.newPayment).subscribe({
+    const payload = {
+      ...this.newPayment,
+      membership_id: this.newPayment.membership_id || null
+    };
+    this.paymentService.createPayment(payload).subscribe({
       next: () => {
         this.modalLoading = false;
         this.closeModal();

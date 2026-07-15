@@ -49,6 +49,9 @@ export class Register {
     }).subscribe({
       next: (response) => {
         this.authService.setToken(response.token);
+        if (response.user?.role) {
+          this.authService.setRole(response.user.role);
+        }
         this.loading = false;
         this.router.navigate(['/']);
       },

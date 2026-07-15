@@ -8,6 +8,11 @@
       <p>Here's what's happening at the gym</p>
     } @else {
       <p>Welcome back! Keep up your fitness journey</p>
+      @if (myMemberId) {
+        <div class="member-id-badge" style="margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent-green); color: var(--accent-green); border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
+          <i class="bi bi-card-text"></i> Member ID: #{{ myMemberId }}
+        </div>
+      }
     }
   </div>
 

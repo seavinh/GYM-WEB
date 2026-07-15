@@ -47,7 +47,7 @@ export class Settings implements OnInit {
     this.profileLoading = true;
     this.authService.getProfile().subscribe({
       next: (res: any) => {
-        this.profile = res.user || res;
+        this.profile = { ...(res.user || {}), member: res.member };
         this.userRole = this.profile.role || '';
         this.authService.setRole(this.userRole);
         this.profileLoading = false;

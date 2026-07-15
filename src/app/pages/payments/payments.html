@@ -148,7 +148,7 @@
           <input type="number" class="auth-input" [(ngModel)]="newPayment.member_id" placeholder="Enter member ID" />
         </div>
         <div class="auth-form-group">
-          <label>Membership Plan *</label>
+          <label>Membership Plan <span style="color: var(--text-secondary); font-weight: 400;">(optional)</span></label>
           <select class="auth-input" [(ngModel)]="newPayment.membership_id" style="cursor: pointer;">
             <option value="">— Select plan —</option>
             @for (m of memberships; track m.membership_id) {

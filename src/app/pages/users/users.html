@@ -82,7 +82,16 @@
                   <span style="color: var(--text-primary); font-weight: 600;">{{ user.username }}</span>
                 </div>
               </td>
-              <td>{{ getMemberName(user) }}</td>
+              <td>
+                @if (user.member) {
+                  <div>{{ user.member.full_name }}</div>
+                  <div style="font-size: 0.75rem; color: var(--accent-green); font-weight: 600; margin-top: 2px;">
+                    ID: #{{ user.member.member_id }}
+                  </div>
+                } @else {
+                  <span style="color: var(--text-muted);">—</span>
+                }
+              </td>
               <td>
                 <span class="badge" [ngClass]="getRoleBadge(user.role)">{{ user.role }}</span>
               </td>
@@ -149,16 +158,8 @@
       @if (modalError) {
         <div class="alert-error">
           <i class="bi bi-exclamation-circle-fill"></i> {{ modalError }}
-  </div>
-}
-
-<app-confirm-dialog
-  [show]="showConfirm"
-  title="confirm.delete_user"
-  message="common.confirm_delete"
-  (confirmed)="onConfirmDelete()"
-  (cancelled)="onCancelDelete()">
-</app-confirm-dialog>
+        </div>
+      }
 
       <div class="modal-user-info">
         <div class="user-avatar" [ngClass]="getRoleBadge(selectedUser.role)">
@@ -207,3 +208,11 @@
     </div>
   </div>
 }
+
+<app-confirm-dialog
+  [show]="showConfirm"
+  title="confirm.delete_user"
+  message="common.confirm_delete"
+  (confirmed)="onConfirmDelete()"
+  (cancelled)="onCancelDelete()">
+</app-confirm-dialog>

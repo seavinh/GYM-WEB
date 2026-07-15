@@ -19,6 +19,7 @@ export class Home implements OnInit {
   username = 'Admin';
   userInitials = 'A';
   userRole = '';
+  myMemberId: number | null = null;
 
   weeklyProgress: { day: string; value: number }[] = [];
 
@@ -77,6 +78,7 @@ export class Home implements OnInit {
         const user = res.user || res;
         this.username = user.username || 'Admin';
         this.userRole = user.role || 'admin';
+        this.myMemberId = res.member?.member_id || null;
         this.authService.setRole(this.userRole);
         this.userInitials = this.username.substring(0, 2).toUpperCase();
         this.filterQuickLinks();
