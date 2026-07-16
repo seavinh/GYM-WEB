@@ -46,16 +46,8 @@
             <div class="card-detail">
               <i class="bi bi-people"></i>
               {{ trainer.members.length }} assigned member{{ trainer.members.length !== 1 ? 's' : '' }}
-  </div>
-}
-
-<app-confirm-dialog
-  [show]="showConfirm"
-  title="confirm.delete_trainer"
-  message="common.confirm_delete"
-  (confirmed)="onConfirmDelete()"
-  (cancelled)="onCancelDelete()">
-</app-confirm-dialog>
+            </div>
+          }
 
           <div class="card-actions">
             <button class="btn-secondary" style="flex: 1; justify-content: center; padding: 8px;" (click)="openEditModal(trainer)">
@@ -132,3 +124,11 @@
     </div>
   </div>
 }
+
+<app-confirm-dialog
+  [show]="showConfirm"
+  title="confirm.delete_trainer"
+  message="common.confirm_delete"
+  (confirmed)="onConfirmDelete()"
+  (cancelled)="onCancelDelete()">
+</app-confirm-dialog>

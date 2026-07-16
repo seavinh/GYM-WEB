@@ -44,6 +44,7 @@
             <th>Email</th>
             <th>Phone</th>
             <th>Gender</th>
+            <th>Trainer</th>
             <th>Join Date</th>
             <th>Actions</th>
           </tr>
@@ -63,6 +64,13 @@
               <td>{{ member.phone }}</td>
               <td>
                 <span class="badge" [ngClass]="getGenderBadge(member.gender)">{{ member.gender }}</span>
+              </td>
+              <td>
+                @if (member.trainers && member.trainers.length > 0) {
+                  <span class="badge badge-green">{{ member.trainers[0].trainer_name }}</span>
+                } @else {
+                  <span style="color: var(--text-muted); font-size: 0.85rem;">None</span>
+                }
               </td>
               <td>{{ member.join_date | date:'MMM d, y' }}</td>
               <td>
@@ -207,6 +215,17 @@
         <div class="auth-form-group" style="grid-column: 1 / -1;">
           <label>Address <span style="color: var(--text-secondary); font-weight: 400;">(optional)</span></label>
           <input type="text" class="auth-input" [(ngModel)]="form.address" placeholder="123 Main St, City" />
+        </div>
+
+        <!-- Assigned Trainer -->
+        <div class="auth-form-group" style="grid-column: 1 / -1;">
+          <label>Assigned Trainer <span style="color: var(--text-secondary); font-weight: 400;">(optional)</span></label>
+          <select class="auth-input" [(ngModel)]="selectedTrainerId" style="cursor: pointer;">
+            <option value="">None (Self Guided)</option>
+            @for (trainer of trainers; track trainer.trainer_id) {
+              <option [value]="trainer.trainer_id">{{ trainer.trainer_name }} ({{ trainer.specialty || 'General' }})</option>
+            }
+          </select>
         </div>
       </div>
 

@@ -101,8 +101,8 @@
               <span><i class="bi bi-speedometer2"></i> Intermediate</span>
             </div>
             <div style="display: flex; align-items: center; gap: 12px;">
-              <button class="btn-start">Start Workout</button>
-              <button class="btn-play"><i class="bi bi-play-fill"></i></button>
+              <button class="btn-start" (click)="startWorkout('Full Body Strength')">Start Workout</button>
+              <button class="btn-play" (click)="startWorkout('Full Body Strength')"><i class="bi bi-play-fill"></i></button>
             </div>
           </div>
         </div>
@@ -274,6 +274,42 @@
 
   <!-- ========== MEMBER DASHBOARD ========== -->
   @if (isMember()) {
+    <!-- Stats Row -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card" style="cursor: pointer;" (click)="navigateTo('/attendance')">
+          <div class="stat-icon green"><i class="bi bi-calendar-check-fill"></i></div>
+          <div class="stat-label">Total Visits</div>
+          <div class="stat-value">{{ dashboardData?.total_visits || 0 }}</div>
+          <div class="stat-change positive"><i class="bi bi-arrow-up-right"></i> Check-in sessions</div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+          <div class="stat-icon orange"><i class="bi bi-card-text"></i></div>
+          <div class="stat-label">Membership Plan</div>
+          <div class="stat-value" style="font-size: 1.5rem; line-height: 2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" [title]="dashboardData?.membership_name || 'No Active Plan'">{{ dashboardData?.membership_name || 'No Active Plan' }}</div>
+          <div class="stat-change positive"><i class="bi bi-shield-check"></i> Current active plan</div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+          <div class="stat-icon purple"><i class="bi bi-clock-history"></i></div>
+          <div class="stat-label">Valid Until</div>
+          <div class="stat-value" style="font-size: 1.5rem; line-height: 2rem;">{{ dashboardData?.expiry_date || 'N/A' }}</div>
+          <div class="stat-change warning"><i class="bi bi-exclamation-triangle"></i> Expiry date</div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card" style="cursor: pointer;" (click)="navigateTo('/payments')">
+          <div class="stat-icon blue"><i class="bi bi-currency-dollar"></i></div>
+          <div class="stat-label">Total Spent</div>
+          <div class="stat-value">${{ dashboardData?.total_paid || 0 | number:'1.0-0' }}</div>
+          <div class="stat-change positive"><i class="bi bi-check-circle"></i> Payments made</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Quick Actions -->
     <div class="section-card mb-4">
       <div class="section-header">
@@ -306,8 +342,8 @@
               <span><i class="bi bi-speedometer2"></i> Intermediate</span>
             </div>
             <div style="display: flex; align-items: center; gap: 12px;">
-              <button class="btn-start">Start Workout</button>
-              <button class="btn-play"><i class="bi bi-play-fill"></i></button>
+              <button class="btn-start" (click)="startWorkout('Full Body Strength')">Start Workout</button>
+              <button class="btn-play" (click)="startWorkout('Full Body Strength')"><i class="bi bi-play-fill"></i></button>
             </div>
           </div>
         </div>
@@ -371,7 +407,7 @@
           </div>
           <div class="row g-3">
             @for (workout of popularWorkouts.slice(0, 2); track workout.name) {
-              <div class="col-md-6">
+              <div class="col-md-6" (click)="startWorkout(workout.name)" style="cursor: pointer;">
                 <div class="workout-grid-card">
                   <div class="thumb" [style.background-image]="'url(' + workout.image + ')'">
                     <div class="play-btn"><i class="bi bi-play-fill"></i></div>
@@ -394,3 +430,48 @@
   }
 
 } <!-- end @else -->
+
+<!-- Workout Modal -->
+@if (showWorkoutModal) {
+  <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px);"
+       (click)="closeWorkoutModal()">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 20px; padding: 32px; width: 100%; max-width: 440px;"
+         (click)="$event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0;">Start Workout</h4>
+        <button class="btn-icon" (click)="closeWorkoutModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      @if (workoutSessionSuccess) {
+        <div class="alert-success" style="margin-bottom: 20px;">
+          <i class="bi bi-check-circle-fill"></i> {{ workoutSessionSuccess }}
+        </div>
+      }
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="text-align: center; padding: 16px; background: rgba(74, 222, 128, 0.1); border-radius: 12px; border: 1px solid rgba(74, 222, 128, 0.2);">
+          <span style="font-size: 0.75rem; color: var(--accent-green); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Selected Workout</span>
+          <h5 style="margin: 6px 0 0; color: var(--text-primary); font-weight: 700; font-size: 1.1rem;">{{ selectedWorkoutName }}</h5>
+        </div>
+
+        <div class="auth-form-group">
+          <label style="display: block; margin-bottom: 6px;">Select Trainer <span style="color: var(--text-secondary); font-weight: 400;">(optional)</span></label>
+          <select class="auth-input" [(ngModel)]="selectedTrainerId" style="cursor: pointer; width: 100%;">
+            <option value="">Self Guided (No Trainer)</option>
+            @for (t of trainers; track t.trainer_id) {
+              <option [value]="t.trainer_id">{{ t.trainer_name }} ({{ t.specialty || 'General' }})</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 24px;">
+        <button class="btn-secondary" style="flex: 1;" (click)="closeWorkoutModal()">Close</button>
+        <button class="btn-primary" style="flex: 1; justify-content: center;" (click)="startWorkoutSession()" [disabled]="workoutSessionSuccess">
+          <i class="bi bi-play-fill"></i> Start Session
+        </button>
+      </div>
+    </div>
+  </div>
+}
+

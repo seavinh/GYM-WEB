@@ -1,14 +1,16 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../services/dashboard.service';
 import { AuthService } from '../../services/auth.service';
 import { ReportService } from '../../services/report.service';
-import { DashboardData } from '../../models';
+import { TrainerService } from '../../services/trainer.service';
+import { DashboardData, Trainer } from '../../models';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
@@ -20,6 +22,13 @@ export class Home implements OnInit {
   userInitials = 'A';
   userRole = '';
   myMemberId: number | null = null;
+
+  // Workout Session State
+  showWorkoutModal = false;
+  selectedWorkoutName = '';
+  selectedTrainerId = '';
+  workoutSessionSuccess = '';
+  trainers: Trainer[] = [];
 
   weeklyProgress: { day: string; value: number }[] = [];
 
@@ -60,6 +69,7 @@ export class Home implements OnInit {
     private dashboardService: DashboardService,
     private authService: AuthService,
     private reportService: ReportService,
+    private trainerService: TrainerService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
@@ -70,6 +80,7 @@ export class Home implements OnInit {
     this.loadDashboard();
     this.loadWeeklyProgress();
     this.filterQuickLinks();
+    this.loadTrainers();
   }
 
   loadUser(): void {
@@ -86,6 +97,40 @@ export class Home implements OnInit {
       },
       error: () => {}
     });
+  }
+
+  loadTrainers(): void {
+    this.trainerService.getTrainers().subscribe({
+      next: (res) => {
+        this.trainers = res.data || [];
+        this.cdr.detectChanges();
+      },
+      error: () => {}
+    });
+  }
+
+  startWorkout(workoutName: string): void {
+    this.selectedWorkoutName = workoutName;
+    this.selectedTrainerId = '';
+    this.workoutSessionSuccess = '';
+    this.showWorkoutModal = true;
+  }
+
+  closeWorkoutModal(): void {
+    this.showWorkoutModal = false;
+    this.selectedWorkoutName = '';
+    this.selectedTrainerId = '';
+    this.workoutSessionSuccess = '';
+  }
+
+  startWorkoutSession(): void {
+    const trainer = this.trainers.find(t => t.trainer_id === +this.selectedTrainerId);
+    if (trainer) {
+      this.workoutSessionSuccess = `Workout started with Trainer ${trainer.trainer_name}! Let's crush it!`;
+    } else {
+      this.workoutSessionSuccess = `Workout session started! Stay focused and stay strong!`;
+    }
+    this.cdr.detectChanges();
   }
 
   loadDashboard(): void {

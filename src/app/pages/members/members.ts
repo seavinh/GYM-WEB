@@ -2,7 +2,8 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MemberService } from '../../services/member.service';
-import { Member, MemberCreatePayload } from '../../models';
+import { TrainerService } from '../../services/trainer.service';
+import { Member, MemberCreatePayload, Trainer } from '../../models';
 import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -13,6 +14,7 @@ import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.co
 })
 export class Members implements OnInit {
   members: Member[] = [];
+  trainers: Trainer[] = [];
   loading = true;
   error = '';
   searchTerm = '';
@@ -25,6 +27,7 @@ export class Members implements OnInit {
   modalLoading = false;
   modalError = '';
   form: Partial<Member> = {};
+  selectedTrainerId = '';
 
   createUserAccount = false;
   username = '';
@@ -36,10 +39,15 @@ export class Members implements OnInit {
   showConfirm = false;
   deleteTargetId: number | null = null;
 
-  constructor(private memberService: MemberService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private memberService: MemberService,
+    private trainerService: TrainerService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.loadMembers();
+    this.loadTrainers();
   }
 
   loadMembers(): void {
@@ -61,6 +69,16 @@ export class Members implements OnInit {
     });
   }
 
+  loadTrainers(): void {
+    this.trainerService.getTrainers().subscribe({
+      next: (response) => {
+        this.trainers = response.data || [];
+        this.cdr.detectChanges();
+      },
+      error: () => {}
+    });
+  }
+
   onSearch(): void {
     this.currentPage = 1;
     this.loadMembers();
@@ -70,6 +88,7 @@ export class Members implements OnInit {
     this.modalMode = 'add';
     const today = new Date().toISOString().split('T')[0];
     this.form = { gender: 'male', join_date: today };
+    this.selectedTrainerId = '';
     this.createUserAccount = false;
     this.username = '';
     this.password = '';
@@ -82,6 +101,11 @@ export class Members implements OnInit {
   openEditModal(member: Member): void {
     this.modalMode = 'edit';
     this.form = { ...member };
+    if (member.trainers && member.trainers.length > 0) {
+      this.selectedTrainerId = member.trainers[0].trainer_id.toString();
+    } else {
+      this.selectedTrainerId = '';
+    }
     this.createUserAccount = false;
     this.username = '';
     this.password = '';
@@ -94,6 +118,7 @@ export class Members implements OnInit {
   closeModal(): void {
     this.showModal = false;
     this.form = {};
+    this.selectedTrainerId = '';
     this.modalError = '';
     this.formErrors = {};
   }
@@ -163,10 +188,25 @@ export class Members implements OnInit {
       }
 
       this.memberService.createMember(payload).subscribe({
-        next: () => {
-          this.modalLoading = false;
-          this.closeModal();
-          this.loadMembers();
+        next: (newMember) => {
+          if (this.selectedTrainerId) {
+            this.memberService.assignTrainer(newMember.member_id, +this.selectedTrainerId).subscribe({
+              next: () => {
+                this.modalLoading = false;
+                this.closeModal();
+                this.loadMembers();
+              },
+              error: (err) => {
+                this.modalError = err.message || 'Member created but failed to assign trainer';
+                this.modalLoading = false;
+                this.loadMembers();
+              }
+            });
+          } else {
+            this.modalLoading = false;
+            this.closeModal();
+            this.loadMembers();
+          }
         },
         error: (err) => {
           this.modalError = err.message || 'Failed to create member';
@@ -185,10 +225,49 @@ export class Members implements OnInit {
       };
 
       this.memberService.updateMember(this.form.member_id!, updateData).subscribe({
-        next: () => {
-          this.modalLoading = false;
-          this.closeModal();
-          this.loadMembers();
+        next: (updatedMember) => {
+          const oldTrainerId = (this.form.trainers && this.form.trainers.length > 0)
+            ? this.form.trainers[0].trainer_id
+            : null;
+          const newTrainerId = this.selectedTrainerId ? +this.selectedTrainerId : null;
+
+          if (oldTrainerId !== newTrainerId) {
+            const handleTrainerAssignment = () => {
+              if (newTrainerId) {
+                this.memberService.assignTrainer(updatedMember.member_id, newTrainerId).subscribe({
+                  next: () => {
+                    this.modalLoading = false;
+                    this.closeModal();
+                    this.loadMembers();
+                  },
+                  error: (err) => {
+                    this.modalError = err.message || 'Failed to assign new trainer';
+                    this.modalLoading = false;
+                  }
+                });
+              } else {
+                this.modalLoading = false;
+                this.closeModal();
+                this.loadMembers();
+              }
+            };
+
+            if (oldTrainerId) {
+              this.memberService.removeTrainer(updatedMember.member_id, oldTrainerId).subscribe({
+                next: () => handleTrainerAssignment(),
+                error: (err) => {
+                  this.modalError = err.message || 'Failed to remove old trainer';
+                  this.modalLoading = false;
+                }
+              });
+            } else {
+              handleTrainerAssignment();
+            }
+          } else {
+            this.modalLoading = false;
+            this.closeModal();
+            this.loadMembers();
+          }
         },
         error: (err) => {
           this.modalError = err.message || 'Failed to update member';

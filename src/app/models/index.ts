@@ -87,6 +87,14 @@ export interface DashboardData {
   daily_check_ins: number;
   active_now: number;
   recent_payments: Payment[];
+  
+  // Member dashboard specific fields
+  total_visits?: number;
+  membership_name?: string;
+  expiry_date?: string;
+  total_paid?: number;
+  trainers_count?: number;
+  is_member_dashboard?: boolean;
 }
 
 export interface MemberCreatePayload {
