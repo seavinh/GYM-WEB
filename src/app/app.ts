@@ -25,7 +25,7 @@ export class App implements OnInit {
       filter(e => e instanceof NavigationEnd)
     ).subscribe((e: any) => {
       const url = e.urlAfterRedirects || e.url;
-      this.isAuthPage = url.includes('/login') || url.includes('/register');
+      this.isAuthPage = url.includes('/login') || url.includes('/register') || url.includes('/policy');
       this.sidebarShow = false;
     });
   }

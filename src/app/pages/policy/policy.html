@@ -1,4 +1,25 @@
 <div class="page-container animate-fade-in">
+  <!-- Public Standalone Header Bar -->
+  <div class="standalone-navbar card-glass p-3 mb-4 d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-2">
+      <div class="logo-icon-sm" style="width: 36px; height: 36px; border-radius: 10px; background: rgba(74, 222, 128, 0.15); display: flex; align-items: center; justify-content: center;">
+        <i class="bi bi-lightning-charge-fill" style="color: var(--accent-green); font-size: 1.2rem;"></i>
+      </div>
+      <h3 class="mb-0 fw-bold" style="color: var(--text-primary);">Fit<span style="color: var(--accent-green);">Life</span></h3>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      @if (isLoggedIn) {
+        <a routerLink="/" class="btn btn-outline-success btn-sm">
+          <i class="bi bi-speedometer2 me-1"></i>{{ 'nav.dashboard' | translate }}
+        </a>
+      } @else {
+        <a routerLink="/login" class="btn btn-primary btn-sm">
+          <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+        </a>
+      }
+    </div>
+  </div>
+
   <!-- Header -->
   <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
     <div>

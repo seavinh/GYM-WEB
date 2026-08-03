@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { AuthService } from '../../services/auth.service';
+import { LanguageService, Lang } from '../../services/language.service';
 
 export interface PolicyRule {
   id: string;
@@ -34,6 +35,7 @@ export class Policy implements OnInit {
   isAgreed: boolean = false;
   agreeTimestamp: string | null = null;
   userRole: string = '';
+  isLoggedIn: boolean = false;
 
   categories: PolicyCategory[] = [
     {
@@ -156,9 +158,13 @@ export class Policy implements OnInit {
     }
   ];
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    public authService: AuthService,
+    public langService: LanguageService
+  ) {}
 
   ngOnInit(): void {
+    this.isLoggedIn = this.authService.isLoggedIn();
     this.userRole = this.authService.getStoredRole();
     this.loadAgreementState();
   }
