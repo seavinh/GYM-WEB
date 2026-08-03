@@ -15,6 +15,14 @@ import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
 
 export const routes: Routes = [
+  // Public routes (must be matched before auth routes)
+  { path: 'policy', component: Policy },
+  { path: 'policies', redirectTo: 'policy', pathMatch: 'full' },
+  { path: 'privacy-policy', redirectTo: 'policy', pathMatch: 'full' },
+  { path: 'login', component: Login },
+  { path: 'register', component: Register },
+
+  // Guarded app routes
   { path: '', component: Home, canActivate: [authGuard] },
   { path: 'members', component: Members, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'receptionist'] } },
   { path: 'trainers', component: Trainers, canActivate: [authGuard, roleGuard], data: { roles: ['admin'] } },
@@ -24,9 +32,7 @@ export const routes: Routes = [
   { path: 'reports', component: Reports, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'receptionist'] } },
   { path: 'users', component: Users, canActivate: [authGuard, roleGuard], data: { roles: ['admin'] } },
   { path: 'settings', component: Settings, canActivate: [authGuard] },
-  { path: 'policy', component: Policy },
-  { path: 'policies', redirectTo: 'policy' },
-  { path: 'login', component: Login },
-  { path: 'register', component: Register },
-  { path: '**', redirectTo: '' }
+
+  // Fallback
+  { path: '**', redirectTo: 'login' }
 ];
