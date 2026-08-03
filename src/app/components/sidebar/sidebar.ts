@@ -70,7 +70,9 @@ export class Sidebar implements OnInit, OnDestroy {
       error: () => {
         const token = this.authService.getToken();
         if (!token) {
-          this.router.navigate(['/login']);
+          if (!this.router.url.includes('/policy')) {
+            this.router.navigate(['/login']);
+          }
         } else {
           this.role = this.authService.getStoredRole();
           this.filterNav();
