@@ -58,6 +58,14 @@ export class Sidebar implements OnInit, OnDestroy {
   }
 
   loadProfile(): void {
+    const token = this.authService.getToken();
+    if (!token) {
+      if (!this.router.url.includes('/policy')) {
+        this.router.navigate(['/login']);
+      }
+      return;
+    }
+
     this.authService.getProfile().subscribe({
       next: (res: any) => {
         const user = res.user || res;
@@ -68,14 +76,8 @@ export class Sidebar implements OnInit, OnDestroy {
         this.filterNav();
       },
       error: () => {
-        const token = this.authService.getToken();
-        if (!token) {
-          if (!this.router.url.includes('/policy')) {
-            this.router.navigate(['/login']);
-          }
-        } else {
-          this.role = this.authService.getStoredRole();
-          this.filterNav();
+        if (!this.router.url.includes('/policy')) {
+          this.router.navigate(['/login']);
         }
       }
     });
