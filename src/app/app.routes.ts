@@ -8,6 +8,7 @@ import { Equipment } from './pages/equipment/equipment';
 import { Reports } from './pages/reports/reports';
 import { Settings } from './pages/settings/settings';
 import { Users } from './pages/users/users';
+import { Policy } from './pages/policy/policy';
 import { Login } from './pages/login/login';
 import { Register } from './pages/register/register';
 import { authGuard } from './guards/auth.guard';
@@ -23,6 +24,8 @@ export const routes: Routes = [
   { path: 'reports', component: Reports, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'receptionist'] } },
   { path: 'users', component: Users, canActivate: [authGuard, roleGuard], data: { roles: ['admin'] } },
   { path: 'settings', component: Settings, canActivate: [authGuard] },
+  { path: 'policy', component: Policy },
+  { path: 'policies', redirectTo: 'policy' },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
   { path: '**', redirectTo: '' }

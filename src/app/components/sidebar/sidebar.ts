@@ -30,6 +30,7 @@ export class Sidebar implements OnInit, OnDestroy {
     { labelKey: 'nav.equipment', icon: 'bi-tools', route: '/equipment', roles: ['admin'] },
     { labelKey: 'nav.reports', icon: 'bi-bar-chart-fill', route: '/reports', roles: ['admin', 'receptionist'] },
     { labelKey: 'nav.users', icon: 'bi-shield-lock', route: '/users', roles: ['admin'] },
+    { labelKey: 'nav.policy', icon: 'bi-journal-text', route: '/policy', roles: ['admin', 'receptionist', 'member'] },
     { labelKey: 'nav.settings', icon: 'bi-gear-fill', route: '/settings', roles: ['admin', 'receptionist', 'member'] },
   ];
 

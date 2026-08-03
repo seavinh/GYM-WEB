@@ -1,0 +1,200 @@
+<div class="page-container animate-fade-in">
+  <!-- Header -->
+  <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+      <div class="header-badge mb-2">
+        <i class="bi bi-shield-check me-1"></i> {{ 'policy.last_updated' | translate }}
+      </div>
+      <h1 class="page-title mb-1">{{ 'policy.title' | translate }}</h1>
+      <p class="page-subtitle mb-0">{{ 'policy.subtitle' | translate }}</p>
+    </div>
+    <div class="header-actions d-flex gap-2">
+      <button class="btn btn-outline-secondary print-btn" (click)="printPolicy()">
+        <i class="bi bi-printer me-2"></i>{{ 'policy.print_btn' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Agreement Banner -->
+  <div class="agreement-card mb-4" [class.agreed]="isAgreed">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="agreement-icon" [class.active]="isAgreed">
+          <i class="bi" [class.bi-check-circle-fill]="isAgreed" [class.bi-shield-lock]="!isAgreed"></i>
+        </div>
+        <div>
+          <h4 class="agreement-title mb-1">
+            {{ isAgreed ? ('policy.status_agreed' | translate) : ('policy.status_pending' | translate) }}
+          </h4>
+          @if (!isAgreed) {
+            <p class="agreement-desc mb-0">
+              {{ 'policy.agree_desc' | translate }}
+            </p>
+          } @else {
+            <p class="agreement-timestamp mb-0">
+              <i class="bi bi-clock-history me-1"></i>{{ 'policy.agreed_on' | translate }}: {{ agreeTimestamp }}
+            </p>
+          }
+        </div>
+      </div>
+      <div class="form-check form-switch custom-switch">
+        <input 
+          class="form-check-input" 
+          type="checkbox" 
+          id="policyAgreeToggle" 
+          [checked]="isAgreed" 
+          (change)="toggleAgreement()"
+        >
+        <label class="form-check-label ms-2 fw-semibold" for="policyAgreeToggle">
+          {{ 'policy.agree_checkbox' | translate }}
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Navigation Tabs Toolbar -->
+  <div class="filter-toolbar card-glass mb-4 p-3">
+    <div class="row align-items-center g-3">
+      <div class="col-lg-4 col-md-5">
+        <div class="search-box">
+          <i class="bi bi-search search-icon"></i>
+          <input 
+            type="text" 
+            class="form-control" 
+            [placeholder]="'policy.search_placeholder' | translate" 
+            [(ngModel)]="searchTerm"
+          >
+          @if (searchTerm) {
+            <button class="clear-btn" (click)="searchTerm = ''">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          }
+        </div>
+      </div>
+      <div class="col-lg-8 col-md-7">
+        <div class="policy-tabs nav nav-pills flex-nowrap overflow-auto pb-1">
+          <button 
+            class="nav-link" 
+            [class.active]="activeCategory === 'all'" 
+            (click)="setCategory('all')"
+          >
+            <i class="bi bi-grid-fill me-2"></i>{{ 'policy.tab_all' | translate }}
+          </button>
+          <button 
+            class="nav-link" 
+            [class.active]="activeCategory === 'general'" 
+            (click)="setCategory('general')"
+          >
+            <i class="bi bi-journal-check me-2"></i>{{ 'policy.tab_general' | translate }}
+          </button>
+          <button 
+            class="nav-link" 
+            [class.active]="activeCategory === 'membership'" 
+            (click)="setCategory('membership')"
+          >
+            <i class="bi bi-credit-card-2-front-fill me-2"></i>{{ 'policy.tab_membership' | translate }}
+          </button>
+          <button 
+            class="nav-link" 
+            [class.active]="activeCategory === 'safety'" 
+            (click)="setCategory('safety')"
+          >
+            <i class="bi bi-shield-heart-fill me-2"></i>{{ 'policy.tab_safety' | translate }}
+          </button>
+          <button 
+            class="nav-link" 
+            [class.active]="activeCategory === 'privacy'" 
+            (click)="setCategory('privacy')"
+          >
+            <i class="bi bi-lock-fill me-2"></i>{{ 'policy.tab_privacy' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  @if (getFilteredCategories().length === 0) {
+    <div class="empty-state text-center py-5">
+      <div class="empty-icon mb-3">
+        <i class="bi bi-journal-x"></i>
+      </div>
+      <h3 class="fw-bold">{{ 'common.no_data' | translate }}</h3>
+      <p class="text-secondary">{{ 'policy.no_matches' | translate }}</p>
+      <button class="btn btn-primary mt-2" (click)="searchTerm = ''; activeCategory = 'all'">
+        {{ 'policy.reset_filters' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Policy Categories List -->
+  <div class="policy-categories-container">
+    @for (category of getFilteredCategories(); track category.id) {
+      <div class="category-block mb-5">
+        <div class="category-header d-flex align-items-center gap-3 mb-4">
+          <div class="category-icon-badge" [style.background-color]="category.badgeColor">
+            <i class="bi {{ category.icon }}"></i>
+          </div>
+          <div>
+            <h2 class="category-title mb-1">{{ category.titleKey | translate }}</h2>
+            <p class="category-subtitle mb-0">{{ category.descKey | translate }}</p>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          @for (rule of category.rules; track rule.id) {
+            <div class="col-lg-6">
+              <div class="rule-card h-100" [class.important-rule]="rule.important">
+                <div class="rule-card-header d-flex justify-content-between align-items-center mb-3">
+                  <h4 class="rule-title mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-caret-right-fill rule-arrow"></i>
+                    {{ rule.titleKey | translate }}
+                  </h4>
+                  @if (rule.important) {
+                    <span class="badge badge-important">
+                      <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ 'policy.important_badge' | translate }}
+                    </span>
+                  }
+                </div>
+                <p class="rule-desc mb-3">{{ rule.descKey | translate }}</p>
+                <ul class="rule-details-list list-unstyled mb-0">
+                  @for (detail of rule.details; track detail) {
+                    <li class="d-flex align-items-start gap-2 mb-2">
+                      <i class="bi bi-check2-circle detail-check-icon mt-1"></i>
+                      <span>{{ detail }}</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Help & Contact Section -->
+  <div class="help-card card-glass p-4 mt-4">
+    <div class="row align-items-center g-3">
+      <div class="col-md-8">
+        <div class="d-flex align-items-center gap-3">
+          <div class="help-icon">
+            <i class="bi bi-question-circle-fill"></i>
+          </div>
+          <div>
+            <h4 class="fw-bold mb-1">{{ 'policy.help_title' | translate }}</h4>
+            <p class="text-secondary mb-0">{{ 'policy.help_desc' | translate }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 text-md-end">
+        <a routerLink="/settings" class="btn btn-outline-secondary me-2">
+          <i class="bi bi-gear-fill me-1"></i>{{ 'nav.settings' | translate }}
+        </a>
+        <a href="mailto:support@fitlifegym.com" class="btn btn-primary">
+          <i class="bi bi-envelope-fill me-1"></i>{{ 'policy.contact_support' | translate }}
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
