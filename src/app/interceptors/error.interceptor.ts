@@ -21,7 +21,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             case 401:
               errorMessage = 'Session expired. Please login again.';
               localStorage.removeItem('auth_token');
-              if (!router.url.includes('/policy')) {
+              if (!window.location.pathname.includes('/policy')) {
                 router.navigate(['/login']);
               }
               break;

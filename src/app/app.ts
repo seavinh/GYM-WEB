@@ -21,18 +21,23 @@ export class App implements OnInit {
     private themeService: ThemeService,
     private langService: LanguageService
   ) {
+    this.checkAuthPage(window.location.pathname);
     this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)
     ).subscribe((e: any) => {
       const url = e.urlAfterRedirects || e.url;
-      this.isAuthPage = url.includes('/login') || url.includes('/register') || url.includes('/policy');
-      this.sidebarShow = false;
+      this.checkAuthPage(url);
     });
+  }
+
+  private checkAuthPage(url: string): void {
+    const path = window.location.pathname || url;
+    this.isAuthPage = path.includes('/login') || path.includes('/register') || path.includes('/policy');
+    this.sidebarShow = false;
   }
 
   ngOnInit(): void {
     // Theme and language are initialized via their constructors (providedIn: 'root')
-    // Accessing them here ensures they're ready before any component renders
   }
 
   toggleSidebar(): void {

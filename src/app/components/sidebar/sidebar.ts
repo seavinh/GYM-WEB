@@ -60,7 +60,7 @@ export class Sidebar implements OnInit, OnDestroy {
   loadProfile(): void {
     const token = this.authService.getToken();
     if (!token) {
-      if (!this.router.url.includes('/policy')) {
+      if (!window.location.pathname.includes('/policy')) {
         this.router.navigate(['/login']);
       }
       return;
@@ -76,7 +76,7 @@ export class Sidebar implements OnInit, OnDestroy {
         this.filterNav();
       },
       error: () => {
-        if (!this.router.url.includes('/policy')) {
+        if (!window.location.pathname.includes('/policy')) {
           this.router.navigate(['/login']);
         }
       }
